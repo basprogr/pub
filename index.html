@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pub</title>
+    <title>Start</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
     <style>
         *{box-sizing: border-box;}
@@ -12,13 +12,13 @@
         .nav2 { width: 100%; background-color: #ffffff; padding: 5px 20px;   color: #666; border-bottom: 1px solid #dcdcdc;   font-size: 0.8rem;} 
         .container { background-color: #ffffff; max-width: 500px; width: 95%; margin: 10px; padding: 15px; border: 1px solid #dcdcdc;  border-radius: 4px;   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);  } 
         a {  display: block; margin-bottom: 5px;  text-decoration: none;  color: #5f8949; } 
-        #main { height: 200px; width: 100%; max-width: 500px; display: flex; }
+        #main { height: 400px; width: 100%; max-width: 500px; display: flex;}
         .child { flex: 1; }  
     </style>
 </head>
 <body> 
     <nav>
-        <span>public</span>
+        <span>Public</span>
         <span id="status">&#x25FC;</span>  
     </nav>  
     <div class="nav2">pub<span id="indicator">/</span>index</div> 
@@ -53,7 +53,7 @@
           window.location.href = routes[combination];
         } else if (combination.length >= 8) { 
           combination = "";
-          indicator.innerText = ".";  
+          indicator.innerText = "/";  
         }
       }  
       
