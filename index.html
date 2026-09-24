@@ -9,11 +9,17 @@
         *{box-sizing: border-box;}
         body { font-family: monospace;  background-color: #f4f5f7; color: #333333; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;} 
         nav { width: 100%; background-color: #295d84; color: white; padding: 10px 20px;  display: flex; justify-content: space-between; align-items: center;} 
-        .nav2 { width: 100%; background-color: #ffffff; padding: 5px 20px;   color: #666; border-bottom: 1px solid #dcdcdc;   font-size: 0.8rem;} 
-        .container { background-color: #ffffff; max-width: 500px; width: 95%; margin: 10px; padding: 15px; border: 1px solid #dcdcdc;  border-radius: 4px;   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);  } 
-        a {  display: block; margin-bottom: 5px;  text-decoration: none;  color: #5f8949; } 
-        #main { height: 400px; width: 100%; max-width: 500px; display: flex;}
-        .child { flex: 1; }  
+        .nav2 { width: 100%; display: flex; justify-content: space-between; background-color: #ffffff; padding: 5px 20px;   color: #666; border-bottom: 1px solid #dcdcdc;   font-size: 0.8rem;} 
+        .container { background-color: #ffffff; max-width: 500px; width: 95%; margin: 10px 10px 0px; padding: 15px; border: 1px solid #dcdcdc;  border-radius: 4px;   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);  } 
+        a {display: block; margin-bottom: 5px; text-decoration: none; color: #5f8949; } 
+        #terminal { display: flex; flex-direction: column; gap: 6px; max-width: 800px; width: 100%; margin: 0 auto; overflow-y: auto;}
+        .output { color: #555753; white-space: pre-wrap; line-height: 1.4;} 
+        .error { color: #cc0000;} 
+        .success { color: #4e9a06;}
+        .highlight { color: #c4a000;}
+        .input-line { display: flex; align-items: center; gap: 8px; margin-top: 5px;} 
+        .prompt { color: #388e3c; font-weight: bold; white-space: nowrap;}
+        input[type="text"] { background: transparent; border: none;   outline: none; width: 100%;} 
     </style>
 </head>
 <body> 
@@ -21,56 +27,99 @@
         <span>Public</span>
         <span id="status">&#x25FC;</span>  
     </nav>  
-    <div class="nav2">pub<span id="indicator">/</span>index</div> 
+    <div class="nav2">
+      <span>pub/index</span>
+      <span id="lastSeen"></span>
+
+    </div> 
+
     <div class="container">    
       <a href="log.html">📝 Logbook</a>
       <a href="https://mp3juice.co">🎧 Download Mp3</a>  
         <a href="https://www.google.com/search?q=proxy">📡 Proxy</a>
         <a href="https://forms.gle/mF35fpoFdKxmHwiq7">💧 Suhu Kamar</a>  
     </div> 
-    <div id="main">
-        <div id="child1" class="child"></div>
-        <div id="child2" class="child"></div>
-    </div> 
-    <script>  
-      let combination = "";
-      const indicator = document.getElementById("indicator"); 
-      const routes = {
-        "11212212": "https://basprogr.github.io/msgs/index.html?r=oNVbmxMLxvsQpAke&u=bas", 
-        "12121212": "https://asd.fwh.is/contact",
-        "11112222": "https://asd.fwh.is/login.php",
-        "11111112": "https://asd.fwh.is/link",
-      }; 
-      document.getElementById("child1").addEventListener("click", () => { addDigit("1"); }); 
-      document.getElementById("child2").addEventListener("click", () => { addDigit("2"); }); 
-      function addDigit(digit) {
-        combination += digit;
-        indicator.innerText = '\\';  
-        checkCombination();
-      } 
-      function checkCombination() {
-        if (routes[combination]) { 
-          window.location.href = routes[combination];
-        } else if (combination.length >= 8) { 
-          combination = "";
-          indicator.innerText = "/";  
-        }
-      }  
-      
+
+    <div class="container">
+      <div id="terminal">
+        <div class="input-line">
+            <span class="prompt">usr@sandbox-g40:~$</span>
+            <input type="text" id="commandInput" autofocus autocomplete="off" spellcheck="false">
+        </div>
+        <div id="statusMessage" class="output"></div>
+        <div id="history"></div>
+      </div>
+    </div>
+
+ 
+    <script>   
       const SUPABASE_URL = "https://qjwmhtnfowkmwoflwhzy.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_-vCSXzmIWSM9kn7VHWRhjg_g2B5IYXF"; 
       const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
+  
+        const inputField = document.getElementById('commandInput');
+        const historyDiv = document.getElementById('history');
+        const statusDiv = document.getElementById('statusMessage');
+
+        inputField.addEventListener('keypress', async function (e) {
+            if (e.key === 'Enter') {
+                const rawInput = inputField.value.trim();
+                if (!rawInput) return; 
+                
+                appendHistory(`usr@sandbox-g40:~$ ${rawInput}`);
+                inputField.value = '';  
+                statusDiv.className = 'output'; 
+                
+                if (rawInput === 'clear') {
+                    historyDiv.innerHTML = '';
+                    statusDiv.textContent = '';
+                    return;
+                } 
+                
+                statusDiv.textContent = `Mengeksekusi '${rawInput}'...`;
+
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('commands')
+                        .select('url')
+                        .eq('command', rawInput)
+                        .single();
+
+                    if (error || !data) { 
+                        statusDiv.textContent = `zsh: command not found: ${rawInput}`;
+                        statusDiv.className = 'output error';
+                    } else {
+                        statusDiv.textContent = `Redirecting...`;
+                        statusDiv.className = 'output success';
+                        setTimeout(() => {
+                            window.location.href = data.url;
+                        }, 600);
+                    }
+                } catch (err) {
+                    statusDiv.textContent = `System error.`;
+                    statusDiv.className = 'output error'; 
+                }
+            }
+        });
+
+        function appendHistory(text, type = 'output') {
+            const div = document.createElement('div');
+            div.className = `output ${type}`;
+            div.textContent = text;
+            historyDiv.prepend(div);
+        }
+
       const urlParams = new URLSearchParams(window.location.search);
       const roomId = urlParams.get("r"); 
       const statusEl = document.getElementById("status");
   
       function updateStatusColor(userName) {
-        if (userName === "dalq") {
-          statusEl.style.color = "#85be66";  
+        if (userName.length % 2 === 0) {
+          statusEl.style.color = "#85be66"; 
         } else {
-          statusEl.style.color = "#008fb7";  
+          statusEl.style.color = "#008fb7"; 
         }
-      } 
+      }
       async function cekPesanTerakhir() {
         if (!roomId) {
           statusEl.style.color = "gray";
@@ -82,8 +131,7 @@
           .eq("room_id", roomId)
           .order("created_at", { ascending: false })
           .limit(1); 
-        if (error) {
-          console.error("Gagal mengecek pesan:", error);
+        if (error) { 
           statusEl.style.color = "gray";
           return;
         } 
@@ -110,6 +158,28 @@
           }
         )
         .subscribe();
+
+      async function updateLastSeen() { 
+  const { data, error } = await supabaseClient
+    .from('user_logs')
+    .select('last_seen')
+    .eq('id', 22)
+    .single(); 
+  if (error) { 
+    return;
+  }
+ 
+  const spanElement = document.querySelector('span#lastSeen'); 
+  if (data && data.last_seen && spanElement) {
+    const dateObj = new Date(data.last_seen); 
+    const hours = String(dateObj.getHours()).padStart(2, '0');
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0'); 
+    spanElement.textContent = `v.0.${hours}${minutes}`;
+  } else if (spanElement) {
+    spanElement.textContent = 'Belum ada data';
+  }
+} 
+updateLastSeen();
   </script>  
 </body>
 </html>
