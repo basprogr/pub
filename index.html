@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search); 
+      const subDomain = urlParams.get("sbu"); 
+      const supabaseAnonKey = urlParams.get("sba");
+      const roomId = urlParams.get("r"); 
+      const targetUser = urlParams.get("u");
+
+      if (!subDomain && !supabaseAnonKey && !roomId && !targetUser) {
+        window.location.href = "https://example.com";
+      } 
+  </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>public</title>
@@ -35,13 +46,7 @@
       <a href="https://www.google.com/search?q=proxy">📡 Proxy</a> 
     </div> 
   
-    <script>
-      const urlParams = new URLSearchParams(window.location.search); 
-      const subDomain = urlParams.get("sbu"); 
-      const supabaseAnonKey = urlParams.get("sba");
-      const roomId = urlParams.get("r"); 
-      const targetUser = urlParams.get("u");
-
+    <script> 
       const SUPABASE_URL = `https://${subDomain}.supabase.co`;
       const SUPABASE_ANON_KEY = supabaseAnonKey; 
       const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  

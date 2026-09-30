@@ -1,165 +1,43 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search); 
+      const subDomain = urlParams.get("sbu"); 
+      const supabaseAnonKey = urlParams.get("sba"); 
+      if (!subDomain && !supabaseAnonKey) {
+          window.location.href = "https://example.com";
+      }
+  </script>
   <meta charset="UTF-8">
-  <title>log</title>
+  <title>logbook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
   <style> 
-    :root {
-      --bg: #efefe5;
-      --primary: #2a5c84;
-      --card-bg: #ffffff;
-      --card-border: #e5e7eb;
-      --text-main: #111827;
-      --text-muted: #6b7280; 
-      --accent-red: #dc2626;
-      --input-bg: #f3f4f6; 
-    } 
+    :root { --bg: #efefe5; --primary: #2a5c84; --card-bg: #ffffff; --card-border: #e5e7eb; --text-main: #111827; --text-muted: #6b7280;  --accent-red: #dc2626; --input-bg: #f3f4f6;} 
     * { box-sizing: border-box; font-family: monospace; font-size: 0.8rem; } 
     body { margin: 0; padding: 10px; background-color: var(--bg); color: var(--text-main); } 
     div#syncStatus { position: fixed; top: 0; left: 0; width: 100%; height: 32px; line-height: 32px; background-color: #2a5c84; color: #ffffff; text-align: center; font-weight: bold;letter-spacing: 0.5px; z-index: 1000; border-bottom: 1px solid #ffedd5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }  
     div.header { display: flex; justify-content: space-between; align-items: center; padding-top: 32px; max-width: 500px; margin: 0 auto 10px; }
     details#roomList { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; padding: 6px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-
-    details#roomList summary {
-      cursor: pointer;
-      color: var(--primary);
-      font-weight: bold;
-      outline: none;
-    }
-
-    details#roomList table {
-      margin-top: 8px;
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    details#roomList td {
-      padding: 3px 4px; 
-      color: var(--text-muted);
-    }
-
-    details#roomList input[type="checkbox"] {
-      accent-color: var(--primary);
-      cursor: pointer;
-    }
-
-    details#roomList button { 
-      background: var(--primary);
-      color: #ffffff;
-      border: none;
-      padding: 6px;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer; 
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    details#roomList button:hover {
-      opacity: 0.9;
-    }
-
-    /* Date Filter Styling */
-    input[type='date']#filterDate { 
-      background: var(--card-bg);
-      color: var(--text-main);
-      border: 1px solid var(--card-border);
-      padding: 6px 10px;
-      border-radius: 6px;
-      outline: none; 
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-    }
-
-    div#patientContainer { 
-      width: 100%; 
-      max-width: 500px; 
-      padding: 0; 
-      box-sizing: border-box; 
-    }
-
-    div.patient-block { 
-      padding: 8px; 
-      background-color: var(--card-bg); 
-      border: 1px solid var(--card-border); 
-      margin-bottom: 12px; 
-      border-radius: 8px; 
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }   
-
-    div.patient-header { 
-      padding: 6px 10px; 
-      background: #f3f4f6; 
-      font-weight: bold; 
-      color: var(--text-main);
-      border-radius: 6px; 
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    input.patient-name {  
-      border: 1px solid var(--card-border); 
-      background: #ffffff; 
-      color: var(--text-main);
-      padding: 4px 8px; 
-      border-radius: 4px;  
-      outline: none;
-      flex-grow: 1;
-    }
-
-    input.patient-name:focus {
-      border-color: var(--primary);
-    }
-
-    div.patient-content { 
-      padding: 10px 0 5px; 
-      display: grid; 
-      grid-template-columns: calc(50% - 5px) calc(50% - 5px); 
-      gap: 10px; 
-    }  
-
-    .task-input, .therapy-input { 
-      margin-bottom: 8px; 
-      display: flex;
-      gap: 4px;
-    }
-
-    input[type='text'].task, input.todo-input { 
-      font-family: var(--font-mono);
-      width: 100%; 
-      padding: 5px 8px; 
-      background: var(--input-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      border-radius: 4px; 
-      outline: none;
-    }
-
-    input[type='text'].task:focus, input.todo-input:focus {
-      border-color: var(--primary);
-      background: #ffffff;
-    }
-
-    .task-input button, .therapy-input button {
-      font-family: var(--font-mono);
-      background: var(--primary);
-      color: #ffffff;
-      border: none;
-      padding: 0 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-  
-    .bullet-list { 
-      list-style: none; 
-      padding-left: 0; 
-      margin: 0; 
-    }
-
+    details#roomList summary { cursor: pointer; color: var(--primary); font-weight: bold; outline: none;}
+    details#roomList table { margin-top: 8px; width: 100%; border-collapse: collapse;}
+    details#roomList td { padding: 3px 4px;  color: var(--text-muted);}
+    details#roomList input[type="checkbox"] { accent-color: var(--primary); cursor: pointer;}
+    details#roomList button {  background: var(--primary); color: #ffffff; border: none; padding: 6px; border-radius: 4px; font-weight: bold; cursor: pointer;  text-transform: uppercase; letter-spacing: 0.5px;}
+    details#roomList button:hover { opacity: 0.9;}
+    input[type='date']#filterDate {  background: var(--card-bg); color: var(--text-main); border: 1px solid var(--card-border); padding: 6px 10px; border-radius: 6px; outline: none;  box-shadow: 0 1px 2px rgba(0,0,0,0.03);}
+    div#patientContainer {  width: 100%;  max-width: 500px;  padding: 0;  box-sizing: border-box; }
+    div.patient-block {  padding: 8px;  background-color: var(--card-bg);  border: 1px solid var(--card-border);  margin-bottom: 12px;  border-radius: 8px;  box-shadow: 0 1px 3px rgba(0,0,0,0.04);}   
+    div.patient-header {  padding: 6px 10px;  background: #f3f4f6;  font-weight: bold;  color: var(--text-main); border-radius: 6px;  display: flex; align-items: center; gap: 6px;}
+    input.patient-name {   border: 1px solid var(--card-border);  background: #ffffff;  color: var(--text-main); padding: 4px 8px;  border-radius: 4px;   outline: none; flex-grow: 1;}
+    input.patient-name:focus { border-color: var(--primary);}
+    div.patient-content {  padding: 10px 0 5px;  display: grid;  grid-template-columns: calc(50% - 5px) calc(50% - 5px);  gap: 10px; }  
+    .task-input, .therapy-input {  margin-bottom: 8px;  display: flex; gap: 4px;}
+    input[type='text'].task, input.todo-input {  font-family: var(--font-mono); width: 100%;  padding: 5px 8px;  background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); border-radius: 4px;  outline: none;}
+    input[type='text'].task:focus, input.todo-input:focus { border-color: var(--primary); background: #ffffff;}
+    .task-input button, .therapy-input button { font-family: var(--font-mono); background: var(--primary); color: #ffffff; border: none; padding: 0 8px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+      .bullet-list {  list-style: none;  padding-left: 0;  margin: 0; }
     .bullet-list li { display: flex; align-items: center; gap: 8px; padding: 5px 6px; cursor: pointer; border-radius: 4px; margin-bottom: 3px; } 
     .bullet-list li.status-1 .bullet-text { text-decoration: line-through; color: #9ca3af; font-weight: normal; } 
     .bullet-list li.status-2 .bullet-text { text-decoration: none; color: var(--accent-red); font-weight: bold; } 
@@ -169,64 +47,63 @@
 </head>
 <body>
 
-  <div id="syncStatus">Halo, selamat bekerja</div>
-
+  <div id="syncStatus">Halo, selamat bekerja</div> 
   <div class="header">
     <div style="width: 48%;"> 
       <details id="roomList">
         <summary style="cursor: pointer;">Pilih Ruangan</summary>
         <table>
           <tr>
-            <td><label><input type="checkbox" name="room" value="301A"> 301a</label></td>
-            <td><label><input type="checkbox" name="room" value="301B"> 301b</label></td>
+            <td><label><input type="checkbox" name="room" value="301 Bed A"> 301a</label></td>
+            <td><label><input type="checkbox" name="room" value="301 Bed B"> 301b</label></td>
           </tr>
           <tr>
-            <td><label><input type="checkbox" name="room" value="302A"> 302a</label></td>
-            <td><label><input type="checkbox" name="room" value="302B"> 302b</label></td>
+            <td><label><input type="checkbox" name="room" value="302 Bed A"> 302a</label></td>
+            <td><label><input type="checkbox" name="room" value="302 Bed B"> 302b</label></td>
           </tr> 
           <tr>
-            <td><label><input type="checkbox" name="room" value="303A"> 303a</label></td>
-            <td><label><input type="checkbox" name="room" value="303B"> 303b</label></td>
+            <td><label><input type="checkbox" name="room" value="303 Bed A"> 303a</label></td>
+            <td><label><input type="checkbox" name="room" value="303 Bed B"> 303b</label></td>
           </tr>
           <tr>
-            <td><label><input type="checkbox" name="room" value="304A"> 304a</label></td>
-            <td><label><input type="checkbox" name="room" value="304B"> 304b</label></td>
+            <td><label><input type="checkbox" name="room" value="304 Bed A"> 304a</label></td>
+            <td><label><input type="checkbox" name="room" value="304 Bed B"> 304b</label></td>
           </tr>
           <tr>
-            <td><label><input type="checkbox" name="room" value="305A"> 305a</label></td>
-            <td><label><input type="checkbox" name="room" value="305B"> 305b</label></td>
-            <td><label><input type="checkbox" name="room" value="305C"> 305c</label></td> 
+            <td><label><input type="checkbox" name="room" value="305 Bed A"> 305a</label></td>
+            <td><label><input type="checkbox" name="room" value="305 Bed B"> 305b</label></td>
+            <td><label><input type="checkbox" name="room" value="305 Bed C"> 305c</label></td> 
           </tr>
           <tr>
-            <td><label><input type="checkbox" name="room" value="306A"> 306a</label></td>
-            <td><label><input type="checkbox" name="room" value="306B"> 306b</label></td>
-            <td><label><input type="checkbox" name="room" value="306C"> 306c</label></td> 
+            <td><label><input type="checkbox" name="room" value="306 Bed A"> 306a</label></td>
+            <td><label><input type="checkbox" name="room" value="306 Bed B"> 306b</label></td>
+            <td><label><input type="checkbox" name="room" value="306 Bed C"> 306c</label></td> 
           </tr>
           <tr>
-            <td><label><input type="checkbox" name="room" value="307A"> 307a</label></td>
-            <td><label><input type="checkbox" name="room" value="307B"> 307b</label></td>
-            <td><label><input type="checkbox" name="room" value="307C"> 307c</label></td> 
+            <td><label><input type="checkbox" name="room" value="307 Bed A"> 307a</label></td>
+            <td><label><input type="checkbox" name="room" value="307 Bed B"> 307b</label></td>
+            <td><label><input type="checkbox" name="room" value="307 Bed C"> 307c</label></td> 
           </tr>
           <tr>
-            <td><label><input type="checkbox" name="room" value="308A"> 308a</label></td>
-            <td><label><input type="checkbox" name="room" value="308B"> 308b</label></td>
-            <td><label><input type="checkbox" name="room" value="308C"> 308c</label></td> 
+            <td><label><input type="checkbox" name="room" value="308 Bed A"> 308a</label></td>
+            <td><label><input type="checkbox" name="room" value="308 Bed B"> 308b</label></td>
+            <td><label><input type="checkbox" name="room" value="308 Bed C"> 308c</label></td> 
           </tr>
           <tr>
-            <td><label><input type="checkbox" name="room" value="309A"> 309a</label></td>
-            <td><label><input type="checkbox" name="room" value="309B"> 309b</label></td>
-            <td><label><input type="checkbox" name="room" value="309C"> 309c</label></td> 
+            <td><label><input type="checkbox" name="room" value="309 Bed A"> 309a</label></td>
+            <td><label><input type="checkbox" name="room" value="309 Bed B"> 309b</label></td>
+            <td><label><input type="checkbox" name="room" value="309 Bed C"> 309c</label></td> 
           </tr> 
           <tr>
-            <td><label><input type="checkbox" name="room" value="310A"> 310a</label></td>
-            <td><label><input type="checkbox" name="room" value="310B"> 310b</label></td>
-            <td><label><input type="checkbox" name="room" value="310C"> 310c</label></td>
-            <td><label><input type="checkbox" name="room" value="310D"> 310d</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed A"> 310a</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed B"> 310b</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed C"> 310c</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed D"> 310d</label></td>
           </tr>
           <tr>
-            <td><label><input type="checkbox" name="room" value="311A"> 311a</label></td>
-            <td><label><input type="checkbox" name="room" value="311B"> 311b</label></td>
-            <td><label><input type="checkbox" name="room" value="311C"> 311c</label></td> 
+            <td><label><input type="checkbox" name="room" value="311 Bed A"> 311a</label></td>
+            <td><label><input type="checkbox" name="room" value="311 Bed B"> 311b</label></td>
+            <td><label><input type="checkbox" name="room" value="311 Bed C"> 311c</label></td> 
           </tr> 
         </table>  
         <button onclick="addSelectedRooms()" style="width: 100%; margin-top: 5px;">Tambah</button> 
@@ -238,22 +115,18 @@
 
   <div style="display: flex; justify-content: center; width: 100%;">
     <div id="patientContainer"></div>
-  </div>
-
-  <script>
-    // Config Supabase
-    const SUPABASE_URL = 'https://qjwmhtnfowkmwoflwhzy.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqd21odG5mb3drbXdvZmx3aHp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjAwMTIsImV4cCI6MjEwMjUzNjAxMn0.ERWHxYn3GJJKHXJaJaZ2vnypcEM0DF8QE4DR_mjF-3s';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // Ambil tanggal dari input (format YYYYMMDD)
+  </div> 
+  <script> 
+      const SUPABASE_URL = `https://${subDomain}.supabase.co`;
+      const SUPABASE_ANON_KEY = supabaseAnonKey; 
+      const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
+   
     function getSelectedDate() {
       const dateInput = document.getElementById('filterDate');
       const date = dateInput.value;
       return date ? date.replace(/-/g, '') : null;
     }
-
-    // Status syncing UI
+ 
     function setSyncingStatus() {
       document.getElementById('syncStatus').textContent = 'Syncing...';
     }
@@ -317,8 +190,7 @@
       block.querySelectorAll('.task-input button, .therapy-input button').forEach(btn => {
         btn.addEventListener('click', () => addBullet(btn));
       });
-
-      // DELETE Hapus ruangan di Supabase
+ 
       block.querySelector('.remove-room').addEventListener('click', async (e) => {
         e.preventDefault();
         const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, '');
@@ -412,8 +284,7 @@
         createListItem(listElement, t.text, initialStatus);
       });
     }
-
-    // SELECT / READ dari Supabase
+ 
     async function loadLogbookByDate() {
       const date = getSelectedDate();
       if (!date) return;
@@ -445,8 +316,7 @@
       });
       updateSyncStatus();
     }
-
-    // UPSERT (Insert or Update) ke Supabase
+ 
     async function autoSave() {
       const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, '');
       const blocks = document.querySelectorAll('.patient-block');
@@ -480,8 +350,7 @@
         updateSyncStatus();
       }
     }
-
-    // Initialize Tanggal Hari Ini
+ 
     window.addEventListener('DOMContentLoaded', () => {
       const today = new Date();
       const year = today.getFullYear();
