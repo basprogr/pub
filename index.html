@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>public</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
     <style>
         *{box-sizing: border-box;}
@@ -35,56 +36,58 @@
         <a href="https://forms.gle/mF35fpoFdKxmHwiq7">💧 Suhu Kamar</a>  
     </div> 
   
-    <script>   
-      const SUPABASE_URL = "https://qjwmhtnfowkmwoflwhzy.supabase.co";
-      const SUPABASE_ANON_KEY = "sb_publishable_-vCSXzmIWSM9kn7VHWRhjg_g2B5IYXF"; 
-      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
-  
-        const inputField = document.getElementById('cmd'); 
-
-        let loadingInterval = null; 
-
-        inputField.addEventListener('keypress', async function (e) {
-            if (e.key === 'Enter') {
-                const rawInput = inputField.value.trim();
-                if (!rawInput) return;  
-                inputField.value = '';  
- 
-                const loadingSpan = document.getElementById('loading');
-                let dotCount = 0; 
-                loadingInterval = setInterval(() => {
-                    dotCount = (dotCount + 1) % 4; 
-                    loadingSpan.textContent = '.'.repeat(dotCount);
-                }, 200);  
-
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('commands')
-                        .select('url')
-                        .eq('command', rawInput)
-                        .single(); 
-                    clearInterval(loadingInterval);
-                    loadingSpan.textContent = ''; 
-                    if (error || !data) { 
-                        loadingSpan.textContent = 'x';
-                        setTimeout(() => { loadingSpan.textContent = ''; }, 1000);
-                    } else {
-                        setTimeout(() => {
-                            window.location.href = data.url;
-                        }, 500);
-                    }
-                } catch (err) {
-                    console.log(err);
-                    clearInterval(loadingInterval);
-                    loadingSpan.textContent = '';
-                }
-            }
-        });
-
-      const urlParams = new URLSearchParams(window.location.search);
+    <script>
+      const urlParams = new URLSearchParams(window.location.search); 
+      const subDomain = urlParams.get("sbu"); 
+      const supabaseAnonKey = urlParams.get("sba");
       const roomId = urlParams.get("r"); 
+      const targetUser = urlParams.get("u");
+
+      const SUPABASE_URL = `https://${subDomain}.supabase.co`;
+      const SUPABASE_ANON_KEY = supabaseAnonKey; 
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
+      
       const statusEl = document.getElementById("status");
-  
+      const inputField = document.getElementById('cmd'); 
+      let loadingInterval = null; 
+ 
+      inputField.addEventListener('keypress', async function (e) {
+          if (e.key === 'Enter') {
+              const rawInput = inputField.value.trim();
+              if (!rawInput) return;  
+              inputField.value = '';  
+
+              const loadingSpan = document.getElementById('loading');
+              let dotCount = 0; 
+              loadingInterval = setInterval(() => {
+                  dotCount = (dotCount + 1) % 4; 
+                  loadingSpan.textContent = '.'.repeat(dotCount);
+              }, 200);  
+
+              try {
+                  const { data, error } = await supabaseClient
+                      .from('commands')
+                      .select('url')
+                      .eq('command', rawInput)
+                      .single(); 
+                  clearInterval(loadingInterval);
+                  loadingSpan.textContent = ''; 
+                  if (error || !data) { 
+                      loadingSpan.textContent = 'x';
+                      setTimeout(() => { loadingSpan.textContent = ''; }, 1000);
+                  } else {
+                      setTimeout(() => {
+                          window.location.href = data.url;
+                      }, 500);
+                  }
+              } catch (err) {
+                  console.log(err);
+                  clearInterval(loadingInterval);
+                  loadingSpan.textContent = '';
+              }
+          }
+      });
+ 
       function updateStatusColor(userName) {
         if (userName.length % 2 === 0) {
           statusEl.style.color = "#85be66"; 
@@ -92,6 +95,7 @@
           statusEl.style.color = "#008fb7"; 
         }
       }
+ 
       async function cekPesanTerakhir() {
         if (!roomId) {
           statusEl.style.color = "gray";
@@ -114,44 +118,74 @@
         }
       } 
       cekPesanTerakhir();
-  
-      supabaseClient
-        .channel(`cek_status_${roomId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `room_id=eq.${roomId}`,
-          },
-          (payload) => {
-            updateStatusColor(payload.new.user_name);
-          }
-        )
-        .subscribe();
-
-      async function updateLastSeen() { 
-  const { data, error } = await supabaseClient
-    .from('user_logs')
-    .select('last_seen')
-    .eq('id', 22)
-    .single(); 
-  if (error) { 
-    return;
-  }
+   
+      if (roomId) {
+        supabaseClient
+          .channel(`cek_status_${roomId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "messages",
+              filter: `room_id=eq.${roomId}`,
+            },
+            (payload) => {
+              updateStatusColor(payload.new.user_name);
+            }
+          )
+          .subscribe();
+      }
  
-  const spanElement = document.querySelector('span#lastSeen'); 
-  if (data && data.last_seen && spanElement) {
-    const dateObj = new Date(data.last_seen); 
-    const hours = String(dateObj.getHours()).padStart(2, '0');
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0'); 
-    spanElement.textContent = `v.0.${hours}${minutes}`;
-  } else if (spanElement) {
-    spanElement.textContent = 'Belum ada data';
-  }
-} 
-updateLastSeen();
-  </script>  
+      function renderLastSeen(lastSeenValue) {
+        const spanElement = document.querySelector('span#lastSeen');
+        if (lastSeenValue && spanElement) {
+          const dateObj = new Date(lastSeenValue); 
+          const hours = String(dateObj.getHours()).padStart(2, '0');
+          const minutes = String(dateObj.getMinutes()).padStart(2, '0'); 
+          spanElement.textContent = `v.0.${hours}${minutes}`;
+        } else if (spanElement) {
+          spanElement.textContent = 'Belum ada data';
+        }
+      }
+ 
+      async function updateLastSeen() {  
+        if (!targetUser) return;
+        const { data, error } = await supabaseClient
+          .from('user_logs')
+          .select('last_seen')
+          .eq('user_name', targetUser)
+          .single(); 
+        
+        if (error) { 
+          return;
+        }
+      
+        if (data) {
+          renderLastSeen(data.last_seen);
+        }
+      } 
+      updateLastSeen();
+ 
+      if (targetUser) {
+        supabaseClient
+          .channel(`cek_last_seen_${targetUser}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",  
+              schema: "public",
+              table: "user_logs",
+              filter: `user_name=eq.${targetUser}`,
+            },
+            (payload) => {
+              if (payload.new && payload.new.last_seen) {
+                renderLastSeen(payload.new.last_seen);
+              }
+            }
+          )
+          .subscribe();
+      }
+</script>
 </body>
 </html>
