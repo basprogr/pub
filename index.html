@@ -70,7 +70,7 @@
     <header>
         <div class="navbar">
             <a href="#">Gmail</a>
-            <a href="#">Gambar</a>
+            <a href="#">Image</a>
             <div class="app-icon" title="Aplikasi Google">
                 <div class="grid-dots">
                     <span></span><span></span><span></span>
@@ -93,31 +93,25 @@
             <input type="text" class="search-input" id="cmd" autofocus> 
             <div class="search-tools">  
                 <div class="tool-icon">
-                    <svg id="status" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
-                        <path fill="#aaa" d="M12 9c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"></path>
-                        <path fill="#aaa" d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h4.05l1.83-2h4.24l1.83 2H20v12z"></path>
+                    <svg id="status" fill="#aaa" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+                        <path d="M12 9c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"></path>
+                        <path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h4.05l1.83-2h4.24l1.83 2H20v12z"></path>
                     </svg>
                 </div>
             </div>
         </div> 
         <div>
             <span id="loading"></span>
-            <span id="lastSeen"></span> 
-            <span id="status">&#x25FC;</span>
+            <span id="lastSeen"></span>  
         </div>
     </main> 
     <footer> 
         <div class="footer-links">
             <div class="footer-links-group">
-                <a href="#">Tentang</a>
-                <a href="#" onclick="requestNotificationPermission()">Notifikasi</a>
-                <a href="#">Bisnis</a> 
-            </div>
-            <div class="footer-links-group">
-                <a href="#">Privasi</a>
-                <a href="#">Persyaratan</a>
-                <a href="#">Setelan</a>
-            </div>
+                <a href="#">Term of Service</a>
+                <a href="#" onclick="requestNotificationPermission()">Notification</a>
+                <a href="#">Setting</a> 
+            </div>  
         </div>
     </footer> 
 
@@ -166,18 +160,24 @@
               }
           }
       });
- 
+     
+      // Set warna awal (misalnya abu-abu sebelum ada data)
+      if (statusEl) {
+        statusEl.style.fill = "#aaa";
+      }
+
       function updateStatusColor(userName) {
+        if (!statusEl) return;
         if (userName.length % 2 === 0) {
-          statusEl.style.color = "#85be66"; 
+          statusEl.style.fill = "#85be66"; // Hijau
         } else {
-          statusEl.style.color = "#008fb7"; 
+          statusEl.style.fill = "#008fb7"; // Biru
         }
       }
- 
+
       async function cekPesanTerakhir() {
         if (!roomId) {
-          statusEl.style.color = "gray";
+          if (statusEl) statusEl.style.fill = '#aaa';
           return;
         } 
         const { data, error } = await supabaseClient
@@ -186,14 +186,15 @@
           .eq("room_id", roomId)
           .order("created_at", { ascending: false })
           .limit(1); 
+          
         if (error) { 
-          statusEl.style.color = "gray";
+          if (statusEl) statusEl.style.fill = "gray";
           return;
         } 
         if (data && data.length > 0) {
           updateStatusColor(data[0].user_name);
         } else { 
-          statusEl.style.color = "gray";
+          if (statusEl) statusEl.style.fill = "gray";
         }
       } 
       cekPesanTerakhir();
