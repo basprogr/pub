@@ -297,6 +297,36 @@
       resetScreen = true;
     }
   }
+
+if ('serviceWorker' in navigator && 'PushManager' in window) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('Service Worker berhasil didaftarkan scope:', reg.scope);
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      });
+    }
+ 
+    const PUBLIC_VAPID_KEY = 'BM8jpyv89xO3wCEPeYDDWLUKHVh6bOmPaMhBjQ7Dw5374kylLozx63AEOpoP2RI1kIVCjlo4_p7VW0Zen7ljhhQ'; 
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+
   async function requestNotificationPermission() { 
       if (!('Notification' in window)) {
         alert('Notification is not supported');
