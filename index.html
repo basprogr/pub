@@ -2,32 +2,34 @@
 <html lang="id">
 <head>
     <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    let su = urlParams.get("su"); 
-    let sa = urlParams.get("sa");
-    let roomId = urlParams.get("r"); 
-    let targetUser = urlParams.get("tu");
-    let currentUser = urlParams.get("cu");
-
-    if (su || sa || targetUser || currentUser || roomId) { 
-      if (su) localStorage.setItem("pwa_su", su);
-      if (sa) localStorage.setItem("pwa_sa", sa);
-      if (targetUser) localStorage.setItem("pwa_targetUser", targetUser);
-      if (currentUser) localStorage.setItem("pwa_currentUser", currentUser);
-      if (roomId) localStorage.setItem("pwa_roomId", roomId);
-    } else { 
-      su = localStorage.getItem("pwa_su");
-      sa = localStorage.getItem("pwa_sa");
-      targetUser = localStorage.getItem("pwa_targetUser");
-      currentUser = localStorage.getItem("pwa_currentUser");
-      roomId = localStorage.getItem("pwa_roomId"); 
-    } 
-    if (!su || !sa || !targetUser || !currentUser || !roomId) { 
-      window.location.href = "https://example.com";
-    }  
+      const urlParams = new URLSearchParams(window.location.search);
+      let su = urlParams.get("su"); 
+      let sa = urlParams.get("sa");
+      let vapid = urlParams.get("vapid");  
+      let roomId = urlParams.get("r"); 
+      let targetUser = urlParams.get("tu");
+      let currentUser = urlParams.get("cu");  
+      if (su || sa || vapid || targetUser || currentUser || roomId) { 
+        if (su) localStorage.setItem("pwa_su", su);
+        if (sa) localStorage.setItem("pwa_sa", sa);
+        if (vapid) localStorage.setItem("pwa_vapid", vapid);
+        if (targetUser) localStorage.setItem("pwa_targetUser", targetUser);
+        if (currentUser) localStorage.setItem("pwa_currentUser", currentUser);
+        if (roomId) localStorage.setItem("pwa_roomId", roomId);
+      } else {  
+        su = localStorage.getItem("pwa_su");
+        sa = localStorage.getItem("pwa_sa");
+        vapid = localStorage.getItem("pwa_vapid");
+        targetUser = localStorage.getItem("pwa_targetUser");
+        currentUser = localStorage.getItem("pwa_currentUser");
+        roomId = localStorage.getItem("pwa_roomId"); 
+      }  
+      if (!su || !sa || !vapid || !targetUser || !currentUser || !roomId) { 
+        window.location.href = "https://example.com";
+      }  
   </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
     <title>Google</title>
     <style> 
@@ -54,16 +56,15 @@
         .is-loading { opacity: 1 !important; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
         footer {text-align: center; background-color: #f2f2f2;padding: 15px 30px; color: #70757a;font-size: 14px;border-top: 1px solid #dadce0;} 
-        
     </style>
 </head>
 <body> 
     <header>
         <div class="navbar">
-            <a href="mail.google.com">Gmail</a>
-            <a href="image.google.com">Image</a>
+            <a href="https://mail.google.com">Gmail</a>
+            <a href="https://image.google.com">Image</a>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M152 160C174.1 160 192 177.9 192 200L192 248C192 270.1 174.1 288 152 288L104 288C81.9 288 64 270.1 64 248L64 200C64 177.9 81.9 160 104 160L152 160zM344 288L296 288C273.9 288 256 270.1 256 248L256 200C256 177.9 273.9 160 296 160L344 160C366.1 160 384 177.9 384 200L384 248C384 270.1 366.1 288 344 288zM536 288L488 288C465.9 288 448 270.1 448 248L448 200C448 177.9 465.9 160 488 160L536 160C558.1 160 576 177.9 576 200L576 248C576 270.1 558.1 288 536 288zM536 480L488 480C465.9 480 448 462.1 448 440L448 392C448 369.9 465.9 352 488 352L536 352C558.1 352 576 369.9 576 392L576 440C576 462.1 558.1 480 536 480zM344 352C366.1 352 384 369.9 384 392L384 440C384 462.1 366.1 480 344 480L296 480C273.9 480 256 462.1 256 440L256 392C256 369.9 273.9 352 296 352L344 352zM152 480L104 480C81.9 480 64 462.1 64 440L64 392C64 369.9 81.9 352 104 352L152 352C174.1 352 192 369.9 192 392L192 440C192 462.1 174.1 480 152 480z"/></svg>
-            <a href="accounts.google.com" class="signIn">Login</a>
+            <a href="https://accounts.google.com" class="signIn">Login</a>
         </div>
     </header>
  
@@ -86,41 +87,31 @@
     </footer> 
 
     <script> 
-      const SUPABASE_URL = `https://${su}.supabase.co`;
-      const SUPABASE_ANON_KEY = sa; 
-      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
-      
+      const supabaseURL = `https://${su}.supabase.co`;
+      const supabasePublic = sa; 
+      const supabaseClient = window.supabase.createClient(supabaseURL, supabasePublic);   
       const statusEl = document.getElementById("status");
       const inputField = document.getElementById('command');  
       const loadingSvg = document.getElementById('loading');
-      let loadingInterval = null; 
- 
+      let loadingInterval = null;  
       inputField.addEventListener('keypress', async function (e) {
           if (e.key === 'Enter') {
               const rawInput = inputField.value.trim();
               if (!rawInput) return;  
-              inputField.value = '';  
-
-              // Tampilkan animasi mutar (opacity jadi 1)
-              loadingSvg.classList.add('is-loading');
-
+              inputField.value = '';   
+              loadingSvg.classList.add('is-loading'); 
               try {
                   const { data, error } = await supabaseClient
                       .from('commands')
                       .select('url')
                       .eq('command', rawInput)
-                      .single(); 
-
-                  // Sembunyikan animasi loading
-                  loadingSvg.classList.remove('is-loading');
-
-                  if (error || !data) { 
-                      // Jika tidak ada di database, arahkan ke Google Search
+                      .single();  
+                  loadingSvg.classList.remove('is-loading'); 
+                  if (error || !data) {  
                       setTimeout(() => {
                           window.location.href = `https://www.google.com/search?q=${encodeURIComponent(rawInput)}`;
-                      }, 300);
-                  } else {
-                      // Jika ada, arahkan ke URL dari database
+                      }, 500);
+                  } else { 
                       setTimeout(() => {
                           window.location.href = data.url;
                       }, 500);
@@ -130,12 +121,10 @@
                   loadingSvg.classList.remove('is-loading');
               }
           }
-      });
-     
+      }); 
       if (statusEl) {
         statusEl.style.fill = "#aaa";
-      }
-
+      } 
       function updateStatusColor(userName) {
         if (!statusEl) return;
         if (userName.length % 2 === 0) {
@@ -143,8 +132,7 @@
         } else {
           statusEl.style.fill = "#1a73e8"; 
         }
-      }
-
+      } 
       async function cekPesanTerakhir() {
         if (!roomId) {
           if (statusEl) statusEl.style.fill = '#aaa';
@@ -193,7 +181,7 @@
           const dateObj = new Date(lastSeenValue); 
           const hours = String(dateObj.getHours()).padStart(2, '0');
           const minutes = String(dateObj.getMinutes()).padStart(2, '0'); 
-          spanElement.textContent = `10.${hours}${minutes}`;
+          spanElement.textContent = `0.${hours}${minutes}`;
         } else if (spanElement) {
           spanElement.textContent = 'Undefined';
         }
@@ -205,12 +193,10 @@
           .from('user_logs')
           .select('last_seen')
           .eq('user_name', targetUser)
-          .single(); 
-        
+          .single();  
         if (error) { 
           return;
-        }
-      
+        } 
         if (data) {
           renderLastSeen(data.last_seen);
         }
@@ -240,15 +226,13 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
           .then((reg) => {
-            console.log('Service Worker berhasil didaftarkan scope:', reg.scope);
+            console.log('Service worker registered on: ', reg.scope);
           })
           .catch((err) => {
             console.error(err);
           });
       });
-    }
- 
-    const PUBLIC_VAPID_KEY = 'BM8jpyv89xO3wCEPeYDDWLUKHVh6bOmPaMhBjQ7Dw5374kylLozx63AEOpoP2RI1kIVCjlo4_p7VW0Zen7ljhhQ'; 
+    }  
     function urlBase64ToUint8Array(base64String) {
       const padding = '='.repeat((4 - base64String.length % 4) % 4);
       const base64 = (base64String + padding)
@@ -277,7 +261,7 @@
           const registration = await navigator.serviceWorker.ready; 
           const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+            applicationServerKey: urlBase64ToUint8Array(vapid)
           }); 
           const { data, error } = await supabaseClient
             .from('push_subscriptions')
@@ -299,7 +283,6 @@
         alert(err.message);
       }
     } 
-</script>
-
+</script> 
 </body>
 </html>
