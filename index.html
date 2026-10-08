@@ -3,27 +3,27 @@
 <head>
     <script>
     const urlParams = new URLSearchParams(window.location.search);
-    let sbu = urlParams.get("sbu"); 
-    let sba = urlParams.get("sba");
+    let su = urlParams.get("su"); 
+    let sa = urlParams.get("sa");
     let roomId = urlParams.get("r"); 
     let targetUser = urlParams.get("tu");
     let currentUser = urlParams.get("cu");
 
-    if (sbu || sba || targetUser || currentUser || roomId) { 
-      if (sbu) localStorage.setItem("pwa_sbu", sbu);
-      if (sba) localStorage.setItem("pwa_sba", sba);
+    if (su || sa || targetUser || currentUser || roomId) { 
+      if (su) localStorage.setItem("pwa_su", su);
+      if (sa) localStorage.setItem("pwa_sa", sa);
       if (targetUser) localStorage.setItem("pwa_targetUser", targetUser);
       if (currentUser) localStorage.setItem("pwa_currentUser", currentUser);
       if (roomId) localStorage.setItem("pwa_roomId", roomId);
     } else { 
-      sbu = localStorage.getItem("pwa_sbu");
-      sba = localStorage.getItem("pwa_sba");
+      su = localStorage.getItem("pwa_su");
+      sa = localStorage.getItem("pwa_sa");
       targetUser = localStorage.getItem("pwa_targetUser");
       currentUser = localStorage.getItem("pwa_currentUser");
       roomId = localStorage.getItem("pwa_roomId"); 
     } 
-    if (!sbu || !sba || !targetUser || !currentUser || !roomId) { 
-      window.location.href = "https://example.com";
+    if (!su || !sa || !targetUser || !currentUser || !roomId) { 
+      // window.location.href = "https://example.com";
     }  
   </script>
     <meta charset="UTF-8">
@@ -34,28 +34,27 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif;}
         body { display: flex; flex-direction: column; min-height: 100vh; justify-content: space-between; background-color: #ffffff; color: #202124;}
         header { background-color: #f2f2f2; display: flex; justify-content: flex-end; align-items: center; padding: 16px 24px; font-size: 13px;}
-        
         .navbar { display: flex; align-items: center; gap: 1rem;}
         .navbar a { color: #3c4043; text-decoration: none; } 
         .navbar svg { width: 20px; height: 20px; fill: #3c4043; }  
         .signIn {background-color: #1a73e8; color: white !important; padding: 9px 23px;font-weight: 500;border-radius: 4px;} 
-        
         main {display: flex;flex-direction: column;align-items: center;justify-content: center;flex-grow: 1;padding-bottom: 50px;}
-        .logo { font-weight: 600;letter-spacing: -2px;margin-bottom: 26px;user-select: none;}
+        .logo { font-size: 4rem; font-weight: 600; letter-spacing: -2px;margin-bottom: 26px;user-select: none;}
         .logo span:nth-child(1) { color: #4285F4; } 
         .logo span:nth-child(2) { color: #EA4335; } 
         .logo span:nth-child(3) { color: #FBBC05; } 
         .logo span:nth-child(4) { color: #4285F4; } 
         .logo span:nth-child(5) { color: #34A853; } 
-        .logo span:nth-child(6) { color: #EA4335; }  
-
+        .logo span:nth-child(6) { color: #EA4335; }   
         .search-container {width: 582px;max-width: 90%;display: flex;align-items: center;border: 1px solid #dfe1e5; border-radius: 24px; padding: 0 15px; height: 46px; box-shadow: none; transition: box-shadow 0.2s, border-color 0.2s;}
         .search-container:hover, .search-container:focus-within {box-shadow: 0 1px 6px rgba(32,33,36,0.28);border-color: rgba(223,225,229,0);}
-        #command { width: 100%; outline: none; border: none; }
         .search-container svg { width: 20px; height: 20px; fill: #aaa; }
-      
-        footer {background-color: #f2f2f2;padding: 15px 30px; color: #70757a;font-size: 14px;border-top: 1px solid #dadce0;}
-        @media (max-width: 600px) {.logo { font-size: 60px; }.footer-links { justify-content: center; gap: 15px; text-align: center; }.footer-links-group { justify-content: center; gap: 15px;} }
+        #command { width: 100%; outline: none; border: none; }
+        #loading { margin-right: 5px; opacity: 0; transition: opacity 0.3s ease; } 
+        .is-loading { opacity: 1 !important; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+        footer {text-align: center; background-color: #f2f2f2;padding: 15px 30px; color: #70757a;font-size: 14px;border-top: 1px solid #dadce0;} 
+        
     </style>
 </head>
 <body> 
@@ -73,12 +72,10 @@
             <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
         </div> 
         <div class="search-container">  
+            <svg id="loading" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M272 112C272 85.5 293.5 64 320 64C346.5 64 368 85.5 368 112C368 138.5 346.5 160 320 160C293.5 160 272 138.5 272 112zM272 528C272 501.5 293.5 480 320 480C346.5 480 368 501.5 368 528C368 554.5 346.5 576 320 576C293.5 576 272 554.5 272 528zM112 272C138.5 272 160 293.5 160 320C160 346.5 138.5 368 112 368C85.5 368 64 346.5 64 320C64 293.5 85.5 272 112 272zM480 320C480 293.5 501.5 272 528 272C554.5 272 576 293.5 576 320C576 346.5 554.5 368 528 368C501.5 368 480 346.5 480 320zM139 433.1C157.8 414.3 188.1 414.3 206.9 433.1C225.7 451.9 225.7 482.2 206.9 501C188.1 519.8 157.8 519.8 139 501C120.2 482.2 120.2 451.9 139 433.1zM139 139C157.8 120.2 188.1 120.2 206.9 139C225.7 157.8 225.7 188.1 206.9 206.9C188.1 225.7 157.8 225.7 139 206.9C120.2 188.1 120.2 157.8 139 139zM501 433.1C519.8 451.9 519.8 482.2 501 501C482.2 519.8 451.9 519.8 433.1 501C414.3 482.2 414.3 451.9 433.1 433.1C451.9 414.3 482.2 414.3 501 433.1z"/></svg>
             <input type="text" id="command" autofocus> 
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M213.1 128.8L202.7 160L128 160C92.7 160 64 188.7 64 224L64 480C64 515.3 92.7 544 128 544L512 544C547.3 544 576 515.3 576 480L576 224C576 188.7 547.3 160 512 160L437.3 160L426.9 128.8C420.4 109.2 402.1 96 381.4 96L258.6 96C237.9 96 219.6 109.2 213.1 128.8zM320 256C373 256 416 299 416 352C416 405 373 448 320 448C267 448 224 405 224 352C224 299 267 256 320 256z"/></svg>
-        </div> 
-        <div>
-            <span id="loading"></span> 
-        </div>
+            <svg id="status" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M213.1 128.8L202.7 160L128 160C92.7 160 64 188.7 64 224L64 480C64 515.3 92.7 544 128 544L512 544C547.3 544 576 515.3 576 480L576 224C576 188.7 547.3 160 512 160L437.3 160L426.9 128.8C420.4 109.2 402.1 96 381.4 96L258.6 96C237.9 96 219.6 109.2 213.1 128.8zM320 256C373 256 416 299 416 352C416 405 373 448 320 448C267 448 224 405 224 352C224 299 267 256 320 256z"/></svg>
+        </div>  
     </main> 
     <footer> 
         <div class="footer-links"> 
@@ -89,12 +86,13 @@
     </footer> 
 
     <script> 
-      const SUPABASE_URL = `https://${sbu}.supabase.co`;
-      const SUPABASE_ANON_KEY = sba; 
+      const SUPABASE_URL = `https://${su}.supabase.co`;
+      const SUPABASE_ANON_KEY = sa; 
       const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
       
       const statusEl = document.getElementById("status");
-      const inputField = document.getElementById('command'); 
+      const inputField = document.getElementById('command');  
+      const loadingSvg = document.getElementById('loading');
       let loadingInterval = null; 
  
       inputField.addEventListener('keypress', async function (e) {
@@ -103,12 +101,8 @@
               if (!rawInput) return;  
               inputField.value = '';  
 
-              const loadingSpan = document.getElementById('loading');
-              let dotCount = 0; 
-              loadingInterval = setInterval(() => {
-                  dotCount = (dotCount + 1) % 4; 
-                  loadingSpan.textContent = '.'.repeat(dotCount);
-              }, 200);  
+              // Tampilkan animasi mutar (opacity jadi 1)
+              loadingSvg.classList.add('is-loading');
 
               try {
                   const { data, error } = await supabaseClient
@@ -116,20 +110,24 @@
                       .select('url')
                       .eq('command', rawInput)
                       .single(); 
-                  clearInterval(loadingInterval);
-                  loadingSpan.textContent = ''; 
+
+                  // Sembunyikan animasi loading
+                  loadingSvg.classList.remove('is-loading');
+
                   if (error || !data) { 
-                      loadingSpan.textContent = 'x';
-                      setTimeout(() => { loadingSpan.textContent = ''; }, 1000);
+                      // Jika tidak ada di database, arahkan ke Google Search
+                      setTimeout(() => {
+                          window.location.href = `https://www.google.com/search?q=${encodeURIComponent(rawInput)}`;
+                      }, 300);
                   } else {
+                      // Jika ada, arahkan ke URL dari database
                       setTimeout(() => {
                           window.location.href = data.url;
                       }, 500);
                   }
               } catch (err) {
                   console.log(err);
-                  clearInterval(loadingInterval);
-                  loadingSpan.textContent = '';
+                  loadingSvg.classList.remove('is-loading');
               }
           }
       });
