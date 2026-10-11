@@ -34,6 +34,7 @@
     <title>Google</title>
     <style> 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif;}
+        html { scroll-behavior: smooth;}
         body { display: flex; flex-direction: column; min-height: 100vh; justify-content: space-between; background-color: #ffffff; color: #202124;}
         header { background-color: #f2f2f2; display: flex; justify-content: flex-end; align-items: center; padding: 16px 24px; font-size: 13px;}
         .navbar { display: flex; align-items: center; gap: 1rem;}
@@ -41,7 +42,7 @@
         .navbar svg { width: 20px; height: 20px; fill: #3c4043; }  
         .signIn {background-color: #1a73e8; color: white !important; padding: 9px 23px;font-weight: 500;border-radius: 4px;} 
         main {display: flex;flex-direction: column;align-items: center;justify-content: center;flex-grow: 1;padding-bottom: 50px;}
-        .logo { font-size: 4rem; font-weight: 600; letter-spacing: -2px;margin-bottom: 26px;user-select: none;}
+        .logo { font-size: 4rem; font-weight: 600; letter-spacing: -2px; margin-bottom: 20px; user-select: none;}
         .logo span:nth-child(1) { color: #4285F4; } 
         .logo span:nth-child(2) { color: #EA4335; } 
         .logo span:nth-child(3) { color: #FBBC05; } 
@@ -54,7 +55,8 @@
         #command { width: 100%; outline: none; border: none; }
         #loading { margin-right: 5px; opacity: 0; transition: opacity 0.3s ease; } 
         .is-loading { opacity: 1 !important; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }    
+        iframe { height: 40dvh; border: none; }
         footer {text-align: center; background-color: #f2f2f2;padding: 15px 30px; color: #70757a;font-size: 14px;border-top: 1px solid #dadce0;} 
     </style>
 </head>
@@ -77,6 +79,15 @@
             <input type="text" id="command" autofocus> 
             <svg id="status" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M213.1 128.8L202.7 160L128 160C92.7 160 64 188.7 64 224L64 480C64 515.3 92.7 544 128 544L512 544C547.3 544 576 515.3 576 480L576 224C576 188.7 547.3 160 512 160L437.3 160L426.9 128.8C420.4 109.2 402.1 96 381.4 96L258.6 96C237.9 96 219.6 109.2 213.1 128.8zM320 256C373 256 416 299 416 352C416 405 373 448 320 448C267 448 224 405 224 352C224 299 267 256 320 256z"/></svg>
         </div>  
+ 
+        <div id="msgContainer" style="display: none;">
+            <button id="closeButton">Tutup</button>
+            <div id="msgContent">
+
+
+            </div>
+        </div>
+
     </main> 
     <footer> 
         <div class="footer-links"> 
@@ -93,7 +104,13 @@
       const statusEl = document.getElementById("status");
       const inputField = document.getElementById('command');  
       const loadingSvg = document.getElementById('loading');
+
+      const msgContainer = document.getElementById('msgContainer');
+      const msgContent = document.getElementById('msgContent');
+      const closeButton = document.getElementById('closeButton');
+
       let loadingInterval = null;  
+
       inputField.addEventListener('keypress', async function (e) {
           if (e.key === 'Enter') {
               const rawInput = inputField.value.trim();
@@ -109,12 +126,18 @@
                   loadingSvg.classList.remove('is-loading'); 
                   if (error || !data) {  
                       setTimeout(() => {
-                          window.location.href = `https://www.google.com/search?q=${encodeURIComponent(rawInput)}`;
+                          window.location.href = `https://www.google.com/search?q=${encodeURIComponent(rawInput)}`; 
                       }, 500);
                   } else { 
-                      setTimeout(() => {
-                          window.location.href = data.url;
-                      }, 500);
+                      setTimeout(() => { 
+                        msgContent.innerHTML = `<iframe src="${data.url}"></iframe>`; 
+                        msgContainer.style.display = 'block';
+                         
+                        closeButton.addEventListener('click', () => {
+                            msgContent.innerHTML = '';
+                            msgContainer.style.display = 'none';
+                        });   
+                    }, 500);
                   }
               } catch (err) {
                   console.log(err);
