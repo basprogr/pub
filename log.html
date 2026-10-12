@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
   <style> 
-    :root { --bg: #efefe5; --primary: #2a5c84; --card-bg: #ffffff; --card-border: #e5e7eb; --text-main: #111827; --text-muted: #6b7280;  --accent-red: #dc2626; --input-bg: #f3f4f6;} 
+    :root { --bg: #efefe5; --primary: #2a5c84; --card-bg: #ffffff; --card-border: #e5e7eb; --text-main: #111827; --text-muted: #6b7280; --input-bg: #f3f4f6;} 
     * { box-sizing: border-box; font-family: monospace; font-size: 0.8rem; } 
     body { margin: 0; padding: 10px; background-color: var(--bg); color: var(--text-main); } 
     div#syncStatus { position: fixed; top: 0; left: 0; width: 100%; height: 32px; line-height: 32px; background-color: #2a5c84; color: #ffffff; text-align: center; font-weight: bold;letter-spacing: 0.5px; z-index: 1000; border-bottom: 1px solid #ffedd5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }  
@@ -37,7 +37,7 @@
     .bullet-list li { display: flex; align-items: center; gap: 8px; padding: 5px 6px; cursor: pointer; border-radius: 4px; margin-bottom: 3px; } 
     .bullet-list li.status-1 .bullet-text { text-decoration: line-through; color: #9ca3af; font-weight: normal; } 
     .bullet-list li.status-2 .bullet-text { text-decoration: none; color: var(--accent-red); font-weight: bold; } 
-    .remove-room { text-decoration: none; color: var(--accent-red); font-weight: bold; padding: 0 4px; }  
+    .remove-room { width: 15px; height: 15px; line-height: 15px; text-align: center; text-decoration: none; color: #dc2626; font-weight: bold; background-color: #fff; border-radius: 10px; }  
     .delete-btn { color: #9ca3af; cursor: pointer; } 
   </style>
 </head>
@@ -166,16 +166,26 @@
 
       const patientName = patientData.patient_name || '-';
       const diagnosa = patientData.diagnosa_medis || '-';
-      
+
+      const rawDiagnosa = patientData.diagnosa_medis || '-'; 
+      let cleanText = rawDiagnosa.replace(/const diagnosa = patientData\.diagnosa_medis \|\| '-';/g, '');
+      let cleanDiagnose = cleanText 
+        .replace(/\b\d+\.\s*/g, '') 
+        .replace(/[\+\-\_]{2,}/g, '+') 
+        .replace(/\s*[\+\-\_]\s*/g, ', ') 
+        .replace(/\s+/g, ' ')
+        .trim(); 
+      cleanDiagnose = cleanDiagnose.replace(/^,\s*|\s*,\s*$/g, '');
+ 
       let vitalHtml = '<span class="vital-badge">Vital: -</span>';
       if (patientData.vital_signs) {
         const vs = patientData.vital_signs;
         const td = `${vs.sistole || '-'}/${vs.diastole || '-'}`;
         const nadi = `${vs.nadi || '-'}`;
         const suhu = `${vs.suhu || '-'}`;
-        const rr = `${vs.rr || '-'}`;
-        const spo2 = `${vs.spo2 || '-'}%`;
-        const o2 = `${vs.status_oksigen || '0'} lpm`;
+        const rr = `${vs.respirasi || '-'}`;
+        const spo2 = `${vs.spo2 || '-'}`;
+        const o2 = `${vs.status_oks || '0'} lpm`;
 
         vitalHtml = `
           <span class="vital-badge">${td}</span>
@@ -195,7 +205,7 @@
             </div>
             <a href="#_" class="remove-room" title="Hapus Ruangan">x</a>
           </div>
-          <div class="patient-diagnosis">${diagnosa}</div>
+          <div class="patient-diagnosis">${cleanDiagnose}</div>
           <div class="patient-vital-container">
             ${vitalHtml}
           </div>
