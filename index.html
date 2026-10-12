@@ -74,8 +74,7 @@
       let vapid = p.get("vapid");  
       let roomId = p.get("r"); 
       let targetUser = p.get("tu");
-      let currentUser = p.get("cu");  
-
+      let currentUser = p.get("cu");   
       if (su || sa || vapid || targetUser || currentUser || roomId) { 
         if (su) localStorage.setItem("pwa_su", su);
         if (sa) localStorage.setItem("pwa_sa", sa);
@@ -90,11 +89,7 @@
         targetUser = localStorage.getItem("pwa_targetUser");
         currentUser = localStorage.getItem("pwa_currentUser");
         roomId = localStorage.getItem("pwa_roomId"); 
-      }  
-      if (!su || !sa || !vapid || !targetUser || !currentUser || !roomId) { 
-        window.location.href = "https://example.com";
-      }  
-
+      }    
       const supabaseURL = `https://${su}.supabase.co`; 
       const supabaseClient = window.supabase.createClient(supabaseURL, sa);   
       const statusEl = document.getElementById("status");

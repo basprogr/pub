@@ -21,19 +21,23 @@
     input[type='date']#filterDate {  background: var(--card-bg); color: var(--text-main); border: 1px solid var(--card-border); padding: 6px 10px; border-radius: 6px; outline: none;  box-shadow: 0 1px 2px rgba(0,0,0,0.03);}
     div#patientContainer {  width: 100%;  max-width: 500px;  padding: 0;  box-sizing: border-box; }
     div.patient-block {  padding: 8px;  background-color: var(--card-bg);  border: 1px solid var(--card-border);  margin-bottom: 12px;  border-radius: 8px;  box-shadow: 0 1px 3px rgba(0,0,0,0.04);}   
-    div.patient-header {  padding: 6px 10px;  background: #f3f4f6;  font-weight: bold;  color: var(--text-main); border-radius: 6px;  display: flex; align-items: center; gap: 6px;}
-    input.patient-name {   border: 1px solid var(--card-border);  background: #ffffff;  color: var(--text-main); padding: 4px 8px;  border-radius: 4px;   outline: none; flex-grow: 1;}
-    input.patient-name:focus { border-color: var(--primary);}
+    div.patient-header {  padding: 8px 10px;  background: #f3f4f6;  font-weight: bold;  color: var(--text-main); border-radius: 6px;  display: flex; flex-direction: column; gap: 5px;}
+    .patient-title-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .patient-info-left { display: flex; align-items: center; gap: 6px; flex-grow: 1; } 
+    span.patient-name { font-weight: bold; color: var(--primary); }
+    .patient-diagnosis { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; } 
+    .patient-vital-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;}
+    .vital-badge { background: #ffffff; border: 1px solid var(--card-border); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: var(--text-main); font-family: monospace;}
     div.patient-content {  padding: 10px 0 5px;  display: grid;  grid-template-columns: calc(50% - 5px) calc(50% - 5px);  gap: 10px; }  
     .task-input, .therapy-input {  margin-bottom: 8px;  display: flex; gap: 4px;}
     input[type='text'].task, input.todo-input {  font-family: var(--font-mono); width: 100%;  padding: 5px 8px;  background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); border-radius: 4px;  outline: none;}
     input[type='text'].task:focus, input.todo-input:focus { border-color: var(--primary); background: #ffffff;}
     .task-input button, .therapy-input button { font-family: var(--font-mono); background: var(--primary); color: #ffffff; border: none; padding: 0 8px; border-radius: 4px; cursor: pointer; font-weight: bold;}
-      .bullet-list {  list-style: none;  padding-left: 0;  margin: 0; }
+    .bullet-list {  list-style: none;  padding-left: 0;  margin: 0; }
     .bullet-list li { display: flex; align-items: center; gap: 8px; padding: 5px 6px; cursor: pointer; border-radius: 4px; margin-bottom: 3px; } 
     .bullet-list li.status-1 .bullet-text { text-decoration: line-through; color: #9ca3af; font-weight: normal; } 
     .bullet-list li.status-2 .bullet-text { text-decoration: none; color: var(--accent-red); font-weight: bold; } 
-    .remove-room { text-decoration: none; color: var(--accent-red); font-weight: bold; margin: 0 2px; }  
+    .remove-room { text-decoration: none; color: var(--accent-red); font-weight: bold; padding: 0 4px; }  
     .delete-btn { color: #9ca3af; cursor: pointer; } 
   </style>
 </head>
@@ -108,6 +112,7 @@
   <div style="display: flex; justify-content: center; width: 100%;">
     <div id="patientContainer"></div>
   </div> 
+
   <script> 
       const p = new URLSearchParams(window.location.search); 
       const su = p.get("su"); 
@@ -154,14 +159,46 @@
       };
     }
 
-    function generatePatientBlock(room) {
+    function generatePatientBlock(room, patientData = {}) {
       const block = document.createElement('div');
       block.className = 'patient-block';
       block.dataset.room = room;
 
+      const patientName = patientData.patient_name || '-';
+      const diagnosa = patientData.diagnosa_medis || '-';
+      
+      let vitalHtml = '<span class="vital-badge">Vital: -</span>';
+      if (patientData.vital_signs) {
+        const vs = patientData.vital_signs;
+        const td = `${vs.sistole || '0'}/${vs.diastole || '0'} mmHg`;
+        const nadi = `${vs.nadi || '-'} x/min`;
+        const suhu = `${vs.suhu || '-'} °C`;
+        const rr = `${vs.rr || '-'} x/min`;
+        const spo2 = `${vs.spo2 || '-'}%`;
+        const o2 = `${vs.status_oksigen || '-'} lpm`;
+
+        vitalHtml = `
+          <span class="vital-badge">${td}</span>
+          <span class="vital-badge">${nadi}</span>
+          <span class="vital-badge">${suhu}</span>
+          <span class="vital-badge">${rr}</span>
+          <span class="vital-badge">${spo2}</span>
+          <span class="vital-badge">${o2}</span>
+        `;
+      }
+
       block.innerHTML = `  
         <div class="patient-header">
-          ${room} / <a href="#_" class="remove-room">x</a> / <input class="patient-name" type="text" placeholder="Pasien">
+          <div class="patient-title-row">
+            <div class="patient-info-left">
+              <span>${room}</span> / <span class="patient-name">${patientName}</span>
+            </div>
+            <a href="#_" class="remove-room" title="Hapus Ruangan">x</a>
+          </div>
+          <div class="patient-diagnosis">${diagnosa}</div>
+          <div class="patient-vital-container">
+            ${vitalHtml}
+          </div>
         </div>
         <div class="patient-content">
           <div class="task-column">
@@ -178,8 +215,6 @@
           </div>
         </div>
       `;
-
-      block.querySelector('.patient-name').addEventListener('input', debounce(autoSave, 1000));
 
       block.querySelectorAll('.task-input button, .therapy-input button').forEach(btn => {
         btn.addEventListener('click', () => addBullet(btn));
@@ -286,7 +321,7 @@
       setSyncingStatus();
       const { data, error } = await supabaseClient
         .from('logbook')
-        .select('room, patient_name, tasks, therapies')
+        .select('room, patient_name, tasks, therapies, diagnosa_medis, vital_signs')
         .eq('created_at', date)
         .order('room', { ascending: true });
 
@@ -300,9 +335,7 @@
       container.innerHTML = '';
 
       data.forEach(entry => {
-        const block = generatePatientBlock(entry.room);
-        block.querySelector('.patient-name').value = entry.patient_name || '';
-
+        const block = generatePatientBlock(entry.room, entry);
         renderList(block.querySelector('.task-column .bullet-list'), entry.tasks);
         renderList(block.querySelector('.therapy-column .bullet-list'), entry.therapies);
 
@@ -317,7 +350,7 @@
       
       const payload = Array.from(blocks).map(block => ({
         room: block.dataset.room,
-        patient_name: block.querySelector('.patient-name')?.value.trim() || '',
+        patient_name: block.querySelector('.patient-name')?.textContent.trim() || '',
         tasks: Array.from(block.querySelectorAll('.task-column .bullet-list li')).map(li => ({
           text: li.querySelector('.bullet-text')?.textContent.trim() || '',
           status: parseInt(li.dataset.status) || 0
@@ -357,4 +390,4 @@
     });
   </script>
 </body>
-</html>
+</html> 
