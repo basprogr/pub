@@ -170,12 +170,12 @@
       let vitalHtml = '<span class="vital-badge">Vital: -</span>';
       if (patientData.vital_signs) {
         const vs = patientData.vital_signs;
-        const td = `${vs.sistole || '0'}/${vs.diastole || '0'} mmHg`;
-        const nadi = `${vs.nadi || '-'} x/min`;
-        const suhu = `${vs.suhu || '-'} °C`;
-        const rr = `${vs.rr || '-'} x/min`;
+        const td = `${vs.sistole || '-'}/${vs.diastole || '-'}`;
+        const nadi = `${vs.nadi || '-'}`;
+        const suhu = `${vs.suhu || '-'}`;
+        const rr = `${vs.rr || '-'}`;
         const spo2 = `${vs.spo2 || '-'}%`;
-        const o2 = `${vs.status_oksigen || '-'} lpm`;
+        const o2 = `${vs.status_oksigen || '0'} lpm`;
 
         vitalHtml = `
           <span class="vital-badge">${td}</span>
