@@ -129,15 +129,19 @@
                           window.location.href = `https://www.google.com/search?q=${encodeURIComponent(rawInput)}`; 
                       }, 500);
                   } else { 
-                      setTimeout(() => { 
-                        msgContent.innerHTML = `<iframe src="${data.url}"></iframe>`; 
-                        msgContainer.style.display = 'block';
-                         
-                        closeButton.addEventListener('click', () => {
-                            msgContent.innerHTML = '';
-                            msgContainer.style.display = 'none';
-                        });   
-                    }, 500);
+                      setTimeout(() => {  
+                          if (data.url && data.url.length <= 128) {
+                              window.location.href = data.url;
+                          } else {
+                              msgContent.innerHTML = `<iframe src="${data.url}"></iframe>`; 
+                              msgContainer.style.display = 'block';
+                               
+                              closeButton.addEventListener('click', () => {
+                                  msgContent.innerHTML = '';
+                                  msgContainer.style.display = 'none';
+                              });  
+                          }
+                      }, 500);
                   }
               } catch (err) {
                   console.log(err);
