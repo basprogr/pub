@@ -1,33 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      let su = urlParams.get("su"); 
-      let sa = urlParams.get("sa");
-      let vapid = urlParams.get("vapid");  
-      let roomId = urlParams.get("r"); 
-      let targetUser = urlParams.get("tu");
-      let currentUser = urlParams.get("cu");  
-      if (su || sa || vapid || targetUser || currentUser || roomId) { 
-        if (su) localStorage.setItem("pwa_su", su);
-        if (sa) localStorage.setItem("pwa_sa", sa);
-        if (vapid) localStorage.setItem("pwa_vapid", vapid);
-        if (targetUser) localStorage.setItem("pwa_targetUser", targetUser);
-        if (currentUser) localStorage.setItem("pwa_currentUser", currentUser);
-        if (roomId) localStorage.setItem("pwa_roomId", roomId);
-      } else {  
-        su = localStorage.getItem("pwa_su");
-        sa = localStorage.getItem("pwa_sa");
-        vapid = localStorage.getItem("pwa_vapid");
-        targetUser = localStorage.getItem("pwa_targetUser");
-        currentUser = localStorage.getItem("pwa_currentUser");
-        roomId = localStorage.getItem("pwa_roomId"); 
-      }  
-      if (!su || !sa || !vapid || !targetUser || !currentUser || !roomId) { 
-        window.location.href = "https://example.com";
-      }  
-  </script>
+<head> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
@@ -82,10 +55,7 @@
  
         <div id="msgContainer" style="display: none;">
             <button id="closeButton">Tutup</button>
-            <div id="msgContent">
-
-
-            </div>
+            <div id="msgContent"></div>
         </div>
 
     </main> 
@@ -98,9 +68,35 @@
     </footer> 
 
     <script> 
-      const supabaseURL = `https://${su}.supabase.co`;
-      const supabasePublic = sa; 
-      const supabaseClient = window.supabase.createClient(supabaseURL, supabasePublic);   
+      let p = new URLSearchParams(window.location.search);
+      let su = p.get("su"); 
+      let sa = p.get("sa");
+      let vapid = p.get("vapid");  
+      let roomId = p.get("r"); 
+      let targetUser = p.get("tu");
+      let currentUser = p.get("cu");  
+
+      if (su || sa || vapid || targetUser || currentUser || roomId) { 
+        if (su) localStorage.setItem("pwa_su", su);
+        if (sa) localStorage.setItem("pwa_sa", sa);
+        if (vapid) localStorage.setItem("pwa_vapid", vapid);
+        if (targetUser) localStorage.setItem("pwa_targetUser", targetUser);
+        if (currentUser) localStorage.setItem("pwa_currentUser", currentUser);
+        if (roomId) localStorage.setItem("pwa_roomId", roomId);
+      } else {  
+        su = localStorage.getItem("pwa_su");
+        sa = localStorage.getItem("pwa_sa");
+        vapid = localStorage.getItem("pwa_vapid");
+        targetUser = localStorage.getItem("pwa_targetUser");
+        currentUser = localStorage.getItem("pwa_currentUser");
+        roomId = localStorage.getItem("pwa_roomId"); 
+      }  
+      if (!su || !sa || !vapid || !targetUser || !currentUser || !roomId) { 
+        window.location.href = "https://example.com";
+      }  
+
+      const supabaseURL = `https://${su}.supabase.co`; 
+      const supabaseClient = window.supabase.createClient(supabaseURL, sa);   
       const statusEl = document.getElementById("status");
       const inputField = document.getElementById('command');  
       const loadingSvg = document.getElementById('loading');

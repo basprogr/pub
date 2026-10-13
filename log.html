@@ -1,16 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-  <script>
-    const urlParams = new URLSearchParams(window.location.search); 
-      const subDomain = urlParams.get("sbu"); 
-      const supabaseAnonKey = urlParams.get("sba"); 
-      if (!subDomain && !supabaseAnonKey) {
-          window.location.href = "https://example.com";
-      }
-  </script>
+<head> 
   <meta charset="UTF-8">
-  <title>logbook</title>
+  <title>Logbook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
   <style> 
@@ -117,9 +109,11 @@
     <div id="patientContainer"></div>
   </div> 
   <script> 
-      const SUPABASE_URL = `https://${subDomain}.supabase.co`;
-      const SUPABASE_ANON_KEY = supabaseAnonKey; 
-      const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
+      const p = new URLSearchParams(window.location.search); 
+      const su = p.get("su"); 
+      const sa = p.get("sa");   
+      const supabaseURL = `https://${su}.supabase.co`; 
+      const supabaseClient = window.supabase.createClient(supabaseURL, sa);  
    
     function getSelectedDate() {
       const dateInput = document.getElementById('filterDate');
@@ -196,7 +190,7 @@
         const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, '');
         
         setSyncingStatus();
-        const { error } = await _supabase
+        const { error } = await supabaseClient
           .from('logbook')
           .delete()
           .eq('room', block.dataset.room)
@@ -290,7 +284,7 @@
       if (!date) return;
 
       setSyncingStatus();
-      const { data, error } = await _supabase
+      const { data, error } = await supabaseClient
         .from('logbook')
         .select('room, patient_name, tasks, therapies')
         .eq('created_at', date)
@@ -339,7 +333,7 @@
 
       setSyncingStatus();
 
-      const { error } = await _supabase
+      const { error } = await supabaseClient
         .from('logbook')
         .upsert(payload, { onConflict: 'room,created_at' });
 
