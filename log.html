@@ -232,12 +232,9 @@
  
       block.querySelector('.remove-room').addEventListener('click', async (e) => {
         e.preventDefault();
-         
         const isConfirmed = confirm(`Apakah Anda yakin ingin menghapus ruangan ${block.dataset.room}?`);
-        if (!isConfirmed) return; 
-
-        const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, '');
-        
+        if (!isConfirmed) return;  
+        const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, ''); 
         setSyncingStatus();
         const { error } = await supabaseClient
           .from('logbook')
