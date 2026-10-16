@@ -1,6 +1,6 @@
 {
-  "name": "Public",
-  "short_name": "Public",
+  "name": "public",
+  "short_name": "public",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
