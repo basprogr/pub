@@ -136,9 +136,9 @@
                       setTimeout(() => {
                           window.location.href = `https://www.google.com/search?q=${encodeURIComponent(rawInput)}`; 
                       }, 500);
-                  } else { 
+                  } else {
                       setTimeout(() => {  
-                          if (data.url && data.url.length <= 128) {
+                          if (data.url && data.url.length <= 128 || !data.url.includes('embed')) {
                               window.location.href = data.url;
                           } else {
                               iframeContent.innerHTML = `<iframe id="contentIframe" src="${data.url}"></iframe>`; 
