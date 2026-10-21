@@ -29,7 +29,7 @@
         #loading { margin-right: 5px; opacity: 0; transition: opacity 0.3s ease; } 
         .is-loading { opacity: 1 !important; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }    
-        iframe { width: 100%; height: 40dvh; border: none; border-radius: 5px; } 
+        iframe { width: 100%; height: 60dvh; border: none; border-radius: 5px; } 
         #iframeContainer { width: 90%; max-width: 500px; margin: 10px;} 
         #closeButton {  position: relative; width: 100%; padding: 10px;  background-color: #f2f2f2; border: 1px solid #dadce0; border-radius: 5px; font-size: .7rem; color: #70757a; overflow: hidden; z-index: 1;}
         #closeButton::before { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 100%; background-color: transparent; z-index: -1; transform-origin: left; transition: transform 0.1s linear;}
@@ -99,9 +99,11 @@
       const inputField = document.getElementById('command');  
       const loadingSvg = document.getElementById('loading');
 
+      const logoEl = document.querySelector('.logo');
       const iframeContainer = document.getElementById('iframeContainer');
       const iframeContent = document.getElementById('iframeContent');
       const closeButton = document.getElementById('closeButton');
+
 
       let loadingInterval = null;  
       let countdownTimer = null; 
@@ -140,9 +142,11 @@
                       setTimeout(() => {  
                           if (data.url && data.url.length <= 128 || !data.url.includes('embed')) {
                               window.location.href = data.url;
-                          } else {
+                          } else {  
                               iframeContent.innerHTML = `<iframe id="contentIframe" src="${data.url}"></iframe>`; 
-                              iframeContainer.style.display = 'block'; 
+                              iframeContainer.style.display = 'block';  
+                              if (logoEl) logoEl.style.display = 'none'; 
+
                               if (countdownTimer) clearInterval(countdownTimer); 
                               startTime = Date.now(); 
                               countdownTimer = setInterval(() => {
@@ -181,7 +185,8 @@
           if (countdownTimer) clearInterval(countdownTimer);
           iframeContent.innerHTML = '';
           iframeContainer.style.display = 'none';
-          closeButton.style.backgroundImage = 'none';
+          closeButton.style.backgroundImage = 'none'; 
+          logoEl.style.display = 'block'; 
       });
  
       window.addEventListener('message', function(event) {  
