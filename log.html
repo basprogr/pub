@@ -23,8 +23,10 @@
     div.patient-block {  padding: 8px;  background-color: var(--card-bg);  border: 1px solid var(--card-border);  margin-bottom: 12px;  border-radius: 8px;  box-shadow: 0 1px 3px rgba(0,0,0,0.04);}   
     div.patient-header {  padding: 8px 10px;  background: #f3f4f6;  font-weight: bold;  color: var(--text-main); border-radius: 6px;  display: flex; flex-direction: column; gap: 5px;}
     .patient-title-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-    .patient-info-left { display: flex; align-items: center; gap: 6px; flex-grow: 1; } 
-    span.patient-name { font-weight: bold; color: var(--primary); }
+
+    .patient-info-left { display: flex; align-items: center; gap: 1rem; } 
+    .patient-info-left div { display: flex; align-items: center; color: var(--primary); }  
+    
     .patient-diagnosis { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; } 
     .patient-vital-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;}
     .vital-badge { background: #ffffff; border: 1px solid var(--card-border); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: var(--text-main); font-family: monospace;}
@@ -39,6 +41,7 @@
     .bullet-list li.status-2 .bullet-text { text-decoration: none; color: #dc2626; font-weight: bold; } 
     .remove-room { width: 15px; height: 15px; line-height: 15px; text-align: center; text-decoration: none; color: #dc2626; font-weight: bold; background-color: #fff; border-radius: 10px; }  
     .delete-btn { color: #9ca3af; cursor: pointer; } 
+    svg { height: .8rem; margin-right: 5px; }
   </style>
 </head>
 <body>
@@ -160,100 +163,113 @@
     }
 
     function generatePatientBlock(room, patientData = {}) {
-      const block = document.createElement('div');
-      block.className = 'patient-block';
-      block.dataset.room = room;
+    const block = document.createElement('div');
+    block.className = 'patient-block';
+    block.dataset.room = room;
 
-      const patientName = patientData.patient_name || '-';
-      const diagnosa = patientData.diagnosa_medis || '-';
+    const patientName = patientData.patient_name || '-';
+    const diagnosa = patientData.diagnosa_medis || '-';
 
-      const rawDiagnosa = patientData.diagnosa_medis || '-'; 
-      let cleanText = rawDiagnosa.replace(/const diagnosa = patientData\.diagnosa_medis \|\| '-';/g, '');
-      let cleanDiagnose = cleanText 
-        .replace(/\b\d+\.\s*/g, '') 
-        .replace(/[\+\-\_]{2,}/g, '+') 
-        .replace(/\s*[\+\-\_]\s*/g, ', ') 
-        .replace(/\s+/g, ' ')
-        .trim(); 
-      cleanDiagnose = cleanDiagnose.replace(/^,\s*|\s*,\s*$/g, '');
+    const rawDiagnosa = patientData.diagnosa_medis || '-'; 
+    let cleanText = rawDiagnosa.replace(/const diagnosa = patientData\.diagnosa_medis \|\| '-';/g, '');
+    let cleanDiagnose = cleanText 
+      .replace(/\b\d+\.\s*/g, '') 
+      .replace(/[\+\-\_]{2,}/g, '+') 
+      .replace(/\s*[\+\-\_]\s*/g, ', ') 
+      .replace(/\s+/g, ' ')
+      .trim(); 
+    cleanDiagnose = cleanDiagnose.replace(/^,\s*|\s*,\s*$/g, '');
  
-      let vitalHtml = '<span class="vital-badge">Vital: -</span>';
-      if (patientData.vital_signs) {
-        const vs = patientData.vital_signs;
-        const td = `${vs.sistole || '-'}/${vs.diastole || '-'}`;
-        const nadi = `${vs.nadi || '-'}`;
-        const suhu = `${vs.suhu || '-'}`;
-        const rr = `${vs.respirasi || '-'}`;
-        const spo2 = `${vs.spo2 || '-'}`;
-        const o2 = `${vs.status_oks || '0'} lpm`;
+    let vitalHtml = '<span class="vital-badge">Vital: -</span>';
+    if (patientData.vital_signs) {
+      const vs = patientData.vital_signs;
+      const td = `${vs.sistole || '-'}/${vs.diastole || '-'}`;
+      const nadi = `${vs.nadi || '-'}`;
+      const suhu = `${vs.suhu || '-'}`;
+      const rr = `${vs.respirasi || '-'}`;
+      const spo2 = `${vs.spo2 || '-'}`;
 
-        vitalHtml = `
-          <span class="vital-badge">${td}</span>
-          <span class="vital-badge">${nadi}</span>
-          <span class="vital-badge">${suhu}</span>
-          <span class="vital-badge">${rr}</span>
-          <span class="vital-badge">${spo2}</span>
-          <span class="vital-badge">${o2}</span>
-        `;
+      // Buat array untuk menampung badge vital dasar
+      const badges = [
+        `<span class="vital-badge">${td}</span>`,
+        `<span class="vital-badge">${nadi}</span>`,
+        `<span class="vital-badge">${suhu}</span>`,
+        `<span class="vital-badge">${rr}</span>`,
+        `<span class="vital-badge">${spo2}</span>`
+      ];
+
+      // Tambahkan status_oks hanya jika nilainya ada dan bukan 0
+      if (vs.status_oks && vs.status_oks != 0 && vs.status_oks !== '0') {
+        badges.push(`<span class="vital-badge">${vs.status_oks} lpm</span>`);
       }
 
-      block.innerHTML = `  
-        <div class="patient-header">
-          <div class="patient-title-row">
-            <div class="patient-info-left">
-              <span>${room}</span> / <span class="patient-name">${patientName}</span>
-            </div>
-            <a href="#_" class="remove-room" title="Hapus Ruangan">x</a>
-          </div>
-          <div class="patient-diagnosis">${cleanDiagnose}</div>
-          <div class="patient-vital-container">
-            ${vitalHtml}
-          </div>
-        </div>
-        <div class="patient-content">
-          <div class="task-column">
-            <div class="task-input"> 
-              <input type="text" class="todo-input task" placeholder="Task"><button>+</button> 
-            </div>
-            <ul class="bullet-list"></ul>
-          </div>
-          <div class="therapy-column">
-            <div class="therapy-input">
-              <input type="text" class="todo-input task" placeholder="Therapy"><button>+</button> 
-            </div>
-            <ul class="bullet-list"></ul>
-          </div>
-        </div>
-      `;
-
-      block.querySelectorAll('.task-input button, .therapy-input button').forEach(btn => {
-        btn.addEventListener('click', () => addBullet(btn));
-      });
- 
-      block.querySelector('.remove-room').addEventListener('click', async (e) => {
-        e.preventDefault();
-        const isConfirmed = confirm(`Apakah Anda yakin ingin menghapus ruangan ${block.dataset.room}?`);
-        if (!isConfirmed) return;  
-        const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, ''); 
-        setSyncingStatus();
-        const { error } = await supabaseClient
-          .from('logbook')
-          .delete()
-          .eq('room', block.dataset.room)
-          .eq('created_at', created_at);
-
-        if (error) {
-          console.error('Delete failed:', error);
-          document.getElementById('syncStatus').textContent = '❌ Delete failed';
-        } else {
-          block.remove();
-          updateSyncStatus();
-        }
-      });
-
-      activateEnterListeners(block);
-      return block;
+      vitalHtml = badges.join('\n');
     }
+
+    block.innerHTML = `  
+      <div class="patient-header">
+        <div class="patient-title-row">
+          <div class="patient-info-left">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M448 96L439.4 96C428.4 76.9 407.7 64 384 64L256 64C232.3 64 211.6 76.9 200.6 96L192 96C156.7 96 128 124.7 128 160L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 160C512 124.7 483.3 96 448 96zM264 176C250.7 176 240 165.3 240 152C240 138.7 250.7 128 264 128L376 128C389.3 128 400 138.7 400 152C400 165.3 389.3 176 376 176L264 176z"/></svg>
+              ${room}
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M320 312C386.3 312 440 258.3 440 192C440 125.7 386.3 72 320 72C253.7 72 200 125.7 200 192C200 258.3 253.7 312 320 312zM290.3 368C191.8 368 112 447.8 112 546.3C112 562.7 125.3 576 141.7 576L498.3 576C514.7 576 528 562.7 528 546.3C528 447.8 448.2 368 349.7 368L290.3 368z"/></svg>
+              ${patientName}
+            </div>
+          </div>
+          <a href="#_" class="remove-room" title="Hapus Ruangan">x</a>
+        </div>
+        <div class="patient-diagnosis">${cleanDiagnose}</div>
+        <div class="patient-vital-container">
+          ${vitalHtml}
+        </div>
+      </div>
+      <div class="patient-content">
+        <div class="task-column">
+          <div class="task-input"> 
+            <input type="text" class="todo-input task" placeholder="Task"><button>+</button> 
+          </div>
+          <ul class="bullet-list"></ul>
+        </div>
+        <div class="therapy-column">
+          <div class="therapy-input">
+            <input type="text" class="todo-input task" placeholder="Therapy"><button>+</button> 
+          </div>
+          <ul class="bullet-list"></ul>
+        </div>
+      </div>
+    `;
+
+    block.querySelectorAll('.task-input button, .therapy-input button').forEach(btn => {
+      btn.addEventListener('click', () => addBullet(btn));
+    });
+ 
+    block.querySelector('.remove-room').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const isConfirmed = confirm(`Apakah Anda yakin ingin menghapus ruangan ${block.dataset.room}?`);
+      if (!isConfirmed) return;  
+      const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, ''); 
+      setSyncingStatus();
+      const { error } = await supabaseClient
+        .from('logbook')
+        .delete()
+        .eq('room', block.dataset.room)
+        .eq('created_at', created_at);
+
+      if (error) {
+        console.error('Delete failed:', error);
+        document.getElementById('syncStatus').textContent = '❌ Delete failed';
+      } else {
+        block.remove();
+        updateSyncStatus();
+      }
+    });
+
+    activateEnterListeners(block);
+    return block;
+}
 
     function createListItem(ulElement, text, statusValue = 0) {
       const li = document.createElement('li');
