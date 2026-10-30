@@ -26,7 +26,7 @@
 
     .patient-info-left { display: flex; align-items: center; gap: 1rem; } 
     .patient-info-left div { display: flex; align-items: center; color: var(--primary); }  
-    
+     
     .patient-diagnosis { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; } 
     .patient-vital-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;}
     .vital-badge { background: #ffffff; border: 1px solid var(--card-border); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: var(--text-main); font-family: monospace;}
@@ -39,7 +39,17 @@
     .bullet-list li { display: flex; align-items: center; gap: 8px; padding: 5px 6px; cursor: pointer; border-radius: 4px; margin-bottom: 3px; } 
     .bullet-list li.status-1 .bullet-text { text-decoration: line-through; color: #9ca3af; font-weight: normal; } 
     .bullet-list li.status-2 .bullet-text { text-decoration: none; color: #dc2626; font-weight: bold; } 
-    .remove-room { width: 15px; height: 15px; line-height: 15px; text-align: center; text-decoration: none; color: #dc2626; font-weight: bold; background-color: #fff; border-radius: 10px; }  
+    
+    /* Styling Menu Dropdown Opsi (3 Titik) */
+    .room-options-menu { position: relative; display: inline-block; }
+    .options-btn { background: none; border: none; cursor: pointer; font-size: 1rem; font-weight: bold; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; }
+    .options-btn:hover { background: #e5e7eb; color: var(--text-main); }
+    .options-dropdown { display: none; position: absolute; right: 0; top: 100%; background: #ffffff; border: 1px solid var(--card-border); border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100; min-width: 150px; }
+    .room-options-menu.active .options-dropdown { display: block; }
+    .options-dropdown button { display: block; width: 100%; text-align: left; background: none; border: none; padding: 8px 12px; font-family: monospace; font-size: 0.75rem; cursor: pointer; color: var(--text-main); }
+    .options-dropdown button:hover { background: var(--input-bg); }
+    .options-dropdown button.delete-option { color: #dc2626; border-top: 1px solid var(--card-border); }
+
     .delete-btn { color: #9ca3af; cursor: pointer; } 
     svg { height: .8rem; margin-right: 5px; }
   </style>
@@ -154,21 +164,13 @@
       autoSave();
     }
 
-    function debounce(func, delay) {
-      let timeout;
-      return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), delay);
-      };
-    }
-
     function generatePatientBlock(room, patientData = {}) {
     const block = document.createElement('div');
     block.className = 'patient-block';
     block.dataset.room = room;
 
     const patientName = patientData.patient_name || '-';
-    const diagnosa = patientData.diagnosa_medis || '-';
+    const no_rm = patientData.no_rm || '-';
 
     const rawDiagnosa = patientData.diagnosa_medis || '-'; 
     let cleanText = rawDiagnosa.replace(/const diagnosa = patientData\.diagnosa_medis \|\| '-';/g, '');
@@ -189,7 +191,6 @@
       const rr = `${vs.respirasi || '-'}`;
       const spo2 = `${vs.spo2 || '-'}`;
 
-      // Buat array untuk menampung badge vital dasar
       const badges = [
         `<span class="vital-badge">${td}</span>`,
         `<span class="vital-badge">${nadi}</span>`,
@@ -198,7 +199,6 @@
         `<span class="vital-badge">${spo2}</span>`
       ];
 
-      // Tambahkan status_oks hanya jika nilainya ada dan bukan 0
       if (vs.status_oks && vs.status_oks != 0 && vs.status_oks !== '0') {
         badges.push(`<span class="vital-badge">${vs.status_oks} lpm</span>`);
       }
@@ -211,15 +211,21 @@
         <div class="patient-title-row">
           <div class="patient-info-left">
             <div>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M448 96L439.4 96C428.4 76.9 407.7 64 384 64L256 64C232.3 64 211.6 76.9 200.6 96L192 96C156.7 96 128 124.7 128 160L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 160C512 124.7 483.3 96 448 96zM264 176C250.7 176 240 165.3 240 152C240 138.7 250.7 128 264 128L376 128C389.3 128 400 138.7 400 152C400 165.3 389.3 176 376 176L264 176z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M448 96L439.4 96C428.4 76.9 407.7 64 384 64L256 64C232.3 64 211.6 76.9 200.6 96L192 96C156.7 96 128 124.7 128 160L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 160C512 124.7 483.3 96 448 96zM264 176C250.7 176 240 165.3 240 152C240 138.7 250.7 128 264 128L376 128C389.3 128 400 138.7 400 152C400 165.3 389.3 176 376 176L264 176z"/></svg>
               ${room}
-            </div>
+            </div> 
             <div>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M320 312C386.3 312 440 258.3 440 192C440 125.7 386.3 72 320 72C253.7 72 200 125.7 200 192C200 258.3 253.7 312 320 312zM290.3 368C191.8 368 112 447.8 112 546.3C112 562.7 125.3 576 141.7 576L498.3 576C514.7 576 528 562.7 528 546.3C528 447.8 448.2 368 349.7 368L290.3 368z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M320 312C386.3 312 440 258.3 440 192C440 125.7 386.3 72 320 72C253.7 72 200 125.7 200 192C200 258.3 253.7 312 320 312zM290.3 368C191.8 368 112 447.8 112 546.3C112 562.7 125.3 576 141.7 576L498.3 576C514.7 576 528 562.7 528 546.3C528 447.8 448.2 368 349.7 368L290.3 368z"/></svg>
               ${patientName}
             </div> 
           </div>
-          <a href="#_" class="remove-room" title="Hapus Ruangan">x</a>
+          <div class="room-options-menu">
+            <button class="options-btn" title="Opsi">&#8942;</button>
+            <div class="options-dropdown">
+              <button class="wa-eresep-option">Minta Resep via WA</button>
+              <button class="delete-option">Hapus Ruangan</button>
+            </div>
+          </div>
         </div>
         <div class="patient-diagnosis">${cleanDiagnose}</div>
         <div class="patient-vital-container">
@@ -242,11 +248,58 @@
       </div>
     `;
 
-    block.querySelectorAll('.task-input button, .therapy-input button').forEach(btn => {
-      btn.addEventListener('click', () => addBullet(btn));
+    // Event listener untuk tombol titik tiga (toggle menu)
+    const optionsMenu = block.querySelector('.room-options-menu');
+    const optionsBtn = block.querySelector('.options-btn');
+    optionsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Tutup menu lain yang mungkin terbuka
+      document.querySelectorAll('.room-options-menu').forEach(m => {
+        if (m !== optionsMenu) m.classList.remove('active');
+      });
+      optionsMenu.classList.toggle('active');
     });
- 
-    block.querySelector('.remove-room').addEventListener('click', async (e) => {
+
+    // Tutup menu saat klik di luar
+    window.addEventListener('click', () => {
+      optionsMenu.classList.remove('active');
+    });
+
+    // Fitur Minta Resep via WA
+    block.querySelector('.wa-eresep-option').addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Ambil teks terapi yang berstatus merah (status-2)
+      const redTherapies = Array.from(block.querySelectorAll('.therapy-column .bullet-list li.status-2'))
+        .map(li => li.querySelector('.bullet-text')?.textContent.trim())
+        .filter(Boolean);
+
+      if (redTherapies.length === 0) {
+        alert('Tidak ada terapi berwarna merah (status-2) untuk e-resep!');
+        return;
+      }
+
+      // Tentukan sapaan berdasarkan jam saat ini
+      const hour = new Date().getHours();
+      let greeting = 'selamat malam';
+      if (hour >= 4 && hour < 11) {
+        greeting = 'selamat pagi';
+      } else if (hour >= 11 && hour < 15) {
+        greeting = 'selamat siang';
+      } else if (hour >= 15 && hour < 18) {
+        greeting = 'selamat sore';
+      }
+
+      // Format pesan WhatsApp
+      const eresepList = redTherapies.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
+      const message = `${greeting}, minta tolong e-resep:\nRuangan: ${room}\nNama: ${patientName} (RM: ${no_rm})\n\nTerapi:\n${eresepList}`;
+      
+      const encodedMessage = encodeURIComponent(message);
+      window.open(`https://wa.me/62895413955888?text=${encodedMessage}`, '_blank');
+    });
+
+    // Fitur Hapus Ruangan
+    block.querySelector('.delete-option').addEventListener('click', async (e) => {
       e.preventDefault();
       const isConfirmed = confirm(`Apakah Anda yakin ingin menghapus ruangan ${block.dataset.room}?`);
       if (!isConfirmed) return;  
@@ -267,6 +320,10 @@
       }
     });
 
+    block.querySelectorAll('.task-input button, .therapy-input button').forEach(btn => {
+      btn.addEventListener('click', () => addBullet(btn));
+    });
+ 
     activateEnterListeners(block);
     return block;
 }
@@ -348,7 +405,7 @@
       setSyncingStatus();
       const { data, error } = await supabaseClient
         .from('logbook')
-        .select('room, patient_name, tasks, therapies, diagnosa_medis, vital_signs')
+        .select('room, patient_name, no_rm, tasks, therapies, diagnosa_medis, vital_signs')
         .eq('created_at', date)
         .order('room', { ascending: true });
 
@@ -416,4 +473,4 @@
     });
   </script>
 </body>
-</html> 
+</html>
