@@ -130,6 +130,7 @@
       const p = new URLSearchParams(window.location.search); 
       const su = p.get("su"); 
       const sa = p.get("sa");   
+      const wa = p.get("wa");   
       const supabaseURL = `https://${su}.supabase.co`; 
       const supabaseClient = window.supabase.createClient(supabaseURL, sa);  
    
@@ -288,14 +289,15 @@
         greeting = 'selamat siang';
       } else if (hour >= 15 && hour < 18) {
         greeting = 'selamat sore';
-      }
-
-      // Format pesan WhatsApp
-      const eresepList = redTherapies.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
-      const message = `${greeting}, minta tolong e-resep:\nRuangan: ${room}\nNama: ${patientName} (RM: ${no_rm})\n\nTerapi:\n${eresepList}`;
-      
+      } 
+      if (!wa) {
+        alert('Nomor WhatsApp (parameter wa) tidak ditemukan di URL!');
+        return;
+      } 
+      const eresepList = redTherapies.map((item) => `- ${item}`).join('\n');
+      const message = `${greeting} dokter, minta tolong eresep nggih\n\n*${patientName} / ${no_rm}*\n\n${eresepList}`; 
       const encodedMessage = encodeURIComponent(message);
-      window.open(`https://wa.me/62895413955888?text=${encodedMessage}`, '_blank');
+      window.open(`https://wa.me/${wa}?text=${encodedMessage}`, '_blank');
     });
 
     // Fitur Hapus Ruangan
