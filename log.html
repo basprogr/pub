@@ -26,19 +26,22 @@
 
     .patient-info-left { display: flex; align-items: center; gap: 1rem; } 
     .patient-info-left div { display: flex; align-items: center; color: var(--primary); }  
-     
+    div.patient-content {  padding: 10px 0 5px;  display: grid;  grid-template-columns: calc(50% - 5px) calc(50% - 5px);  gap: 10px; }  
+
     .patient-diagnosis { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; } 
     .patient-vital-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;}
     .vital-badge { background: #ffffff; border: 1px solid var(--card-border); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: var(--text-main); font-family: monospace;}
-    div.patient-content {  padding: 10px 0 5px;  display: grid;  grid-template-columns: calc(50% - 5px) calc(50% - 5px);  gap: 10px; }  
     .task-input, .therapy-input {  margin-bottom: 8px;  display: flex; gap: 4px;}
     input[type='text'].task, input.todo-input {  font-family: var(--font-mono); width: 100%;  padding: 5px 8px;  background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); border-radius: 4px;  outline: none;}
     input[type='text'].task:focus, input.todo-input:focus { border-color: var(--primary); background: #ffffff;}
     .task-input button, .therapy-input button { font-family: var(--font-mono); background: var(--primary); color: #ffffff; border: none; padding: 0 8px; border-radius: 4px; cursor: pointer; font-weight: bold;}
     .bullet-list {  list-style: none;  padding-left: 0;  margin: 0; }
     .bullet-list li { display: flex; align-items: center; gap: 8px; padding: 5px 6px; cursor: pointer; border-radius: 4px; margin-bottom: 3px; } 
+    
+    /* Status Styling */
     .bullet-list li.status-1 .bullet-text { text-decoration: line-through; color: #9ca3af; font-weight: normal; } 
     .bullet-list li.status-2 .bullet-text { text-decoration: none; color: #dc2626; font-weight: bold; } 
+    .bullet-list li.status-3 .bullet-text { text-decoration: none; color: #2563eb; font-weight: bold; } /* Warna Biru */
     
     /* Styling Menu Dropdown Opsi (3 Titik) */
     .room-options-menu { position: relative; display: inline-block; }
@@ -73,46 +76,6 @@
           <tr>
             <td><label><input type="checkbox" name="room" value="303 Bed A"> 303a</label></td>
             <td><label><input type="checkbox" name="room" value="303 Bed B"> 303b</label></td>
-          </tr>
-          <tr>
-            <td><label><input type="checkbox" name="room" value="304 Bed A"> 304a</label></td>
-            <td><label><input type="checkbox" name="room" value="304 Bed B"> 304b</label></td>
-          </tr>
-          <tr>
-            <td><label><input type="checkbox" name="room" value="305 Bed A"> 305a</label></td>
-            <td><label><input type="checkbox" name="room" value="305 Bed B"> 305b</label></td>
-            <td><label><input type="checkbox" name="room" value="305 Bed C"> 305c</label></td> 
-          </tr>
-          <tr>
-            <td><label><input type="checkbox" name="room" value="306 Bed A"> 306a</label></td>
-            <td><label><input type="checkbox" name="room" value="306 Bed B"> 306b</label></td>
-            <td><label><input type="checkbox" name="room" value="306 Bed C"> 306c</label></td> 
-          </tr>
-          <tr>
-            <td><label><input type="checkbox" name="room" value="307 Bed A"> 307a</label></td>
-            <td><label><input type="checkbox" name="room" value="307 Bed B"> 307b</label></td>
-            <td><label><input type="checkbox" name="room" value="307 Bed C"> 307c</label></td> 
-          </tr>
-          <tr>
-            <td><label><input type="checkbox" name="room" value="308 Bed A"> 308a</label></td>
-            <td><label><input type="checkbox" name="room" value="308 Bed B"> 308b</label></td>
-            <td><label><input type="checkbox" name="room" value="308 Bed C"> 308c</label></td> 
-          </tr>
-          <tr>
-            <td><label><input type="checkbox" name="room" value="309 Bed A"> 309a</label></td>
-            <td><label><input type="checkbox" name="room" value="309 Bed B"> 309b</label></td>
-            <td><label><input type="checkbox" name="room" value="309 Bed C"> 309c</label></td> 
-          </tr> 
-          <tr>
-            <td><label><input type="checkbox" name="room" value="310 Bed A"> 310a</label></td>
-            <td><label><input type="checkbox" name="room" value="310 Bed B"> 310b</label></td>
-            <td><label><input type="checkbox" name="room" value="310 Bed C"> 310c</label></td>
-            <td><label><input type="checkbox" name="room" value="310 Bed D"> 310d</label></td>
-          </tr>
-          <tr>
-            <td><label><input type="checkbox" name="room" value="311 Bed A"> 311a</label></td>
-            <td><label><input type="checkbox" name="room" value="311 Bed B"> 311b</label></td>
-            <td><label><input type="checkbox" name="room" value="311 Bed C"> 311c</label></td> 
           </tr> 
         </table>  
         <button onclick="addSelectedRooms()" style="width: 100%; margin-top: 5px;">Tambah</button> 
@@ -254,23 +217,19 @@
     const optionsBtn = block.querySelector('.options-btn');
     optionsBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      // Tutup menu lain yang mungkin terbuka
       document.querySelectorAll('.room-options-menu').forEach(m => {
         if (m !== optionsMenu) m.classList.remove('active');
       });
       optionsMenu.classList.toggle('active');
     });
 
-    // Tutup menu saat klik di luar
     window.addEventListener('click', () => {
       optionsMenu.classList.remove('active');
     });
 
-    // Fitur Minta Resep via WA
+    // Fitur Minta Resep via WA (Terapi warna merah / status-2)
     block.querySelector('.wa-eresep-option').addEventListener('click', (e) => {
       e.preventDefault();
-      
-      // Ambil teks terapi yang berstatus merah (status-2)
       const redTherapies = Array.from(block.querySelectorAll('.therapy-column .bullet-list li.status-2'))
         .map(li => li.querySelector('.bullet-text')?.textContent.trim())
         .filter(Boolean);
@@ -280,7 +239,6 @@
         return;
       }
 
-      // Tentukan sapaan berdasarkan jam saat ini
       const hour = new Date().getHours();
       let greeting = 'selamat malam';
       if (hour >= 4 && hour < 11) {
@@ -345,12 +303,17 @@
 
       li.querySelector('.bullet-text').addEventListener('click', () => {
         let currentStatus = parseInt(li.dataset.status) || 0;
+        
+        // Hapus kelas status lama jika ada
         if (currentStatus > 0) li.classList.remove(`status-${currentStatus}`);
 
-        currentStatus = (currentStatus + 1) % 3;
+        // Ubah siklus menjadi 4 tahap: 0 -> 1 -> 2 -> 3 -> kembali ke 0
+        currentStatus = (currentStatus + 1) % 4;
         li.dataset.status = currentStatus;
 
+        // Tambahkan kelas status baru jika > 0
         if (currentStatus > 0) li.classList.add(`status-${currentStatus}`);
+        
         autoSave();
       });
 
@@ -362,15 +325,41 @@
 
       ulElement.appendChild(li);
     }
+  
+    const drugDatabase = [
+        "amlodipin", 'antrain', "asam asetilsalisilat",
+        'ceftazidime', "ceftriaxone",
+        "furosemide",
+        "ketorolac",
+        "metoclopramide", "metronidazole", 
+        "omeprazole", "ondansetron",
+        'pantoprazole', "paracetamol",
+        "ranitidine",
+        'spironolactone',
+        "vipalbumin"
+    ];  
+
+    function formatTherapyText(text, isTherapyCol) { 
+      const cleanText = text.toLowerCase().trim();
+      if (!cleanText) return ""; 
+      if (!isTherapyCol) return cleanText; 
+      const parts = cleanText.split(/\s+/);
+      const query = parts[0]; 
+      const extraInfo = parts.slice(1).join(' ');  
+      const matchedDrug = drugDatabase.find(drug => drug.includes(query)); 
+      const finalDrug = matchedDrug ? matchedDrug : query; 
+      return extraInfo ? `${finalDrug} ${extraInfo}` : finalDrug;
+    }
 
     function addBullet(button) {
       const input = button.previousElementSibling;
-      const ul = button.closest('.task-column, .therapy-column')?.querySelector('.bullet-list');
-      const text = input.value.trim();
-
-      if (!text) return;
-      createListItem(ul, text, 0);
-
+      const column = button.closest('.task-column, .therapy-column');
+      const ul = column?.querySelector('.bullet-list');
+      let text = input.value.trim(); 
+      if (!text) return; 
+      const isTherapy = column.classList.contains('therapy-column'); 
+      text = formatTherapyText(text, isTherapy); 
+      createListItem(ul, text, 0); 
       input.value = '';
       input.focus();
       autoSave();
