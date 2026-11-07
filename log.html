@@ -366,39 +366,12 @@
       ulElement.appendChild(li);
     }
   
-    const drugDatabase = [
-        "amlodipin", 'antrain', "asam asetilsalisilat",
-        'ceftazidime', "ceftriaxone",
-        "furosemide",
-        "ketorolac",
-        "metoclopramide", "metronidazole", 
-        "omeprazole", "ondansetron",
-        'pantoprazole', "paracetamol",
-        "ranitidine",
-        'spironolactone',
-        "vipalbumin"
-    ];  
-
-    function formatTherapyText(text, isTherapyCol) { 
-      const cleanText = text.toLowerCase().trim();
-      if (!cleanText) return ""; 
-      if (!isTherapyCol) return cleanText; 
-      const parts = cleanText.split(/\s+/);
-      const query = parts[0]; 
-      const extraInfo = parts.slice(1).join(' ');  
-      const matchedDrug = drugDatabase.find(drug => drug.includes(query)); 
-      const finalDrug = matchedDrug ? matchedDrug : query; 
-      return extraInfo ? `${finalDrug} ${extraInfo}` : finalDrug;
-    }
-
     function addBullet(button) {
       const input = button.previousElementSibling;
       const column = button.closest('.task-column, .therapy-column');
       const ul = column?.querySelector('.bullet-list');
       let text = input.value.trim(); 
-      if (!text) return; 
-      const isTherapy = column.classList.contains('therapy-column'); 
-      text = formatTherapyText(text, isTherapy); 
+      if (!text) return;  
       createListItem(ul, text, 0); 
       input.value = '';
       input.focus();
