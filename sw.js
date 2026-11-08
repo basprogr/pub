@@ -95,38 +95,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title, options)
   );
 });
- 
-// self.addEventListener('notificationclick', (event) => {
-//   event.notification.close();
-//   event.waitUntil(
-//     clients.openWindow(event.notification.data.url)
-//   );
-// });
-
-self.addEventListener('notificationclick', (event) => {
+  
+self.addEventListener('notificationclick', (event) => { 
   event.notification.close();
-  const urlToOpen = event.notification.data?.url || `${BASE}/`;
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Cek apakah ada tab/jendela PWA yang sudah terbuka di origin yang sama
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
-        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
-          return client.focus().then((focusedClient) => {
-            // Jika ingin memaksa navigasi ke URL notifikasi saat difokuskan
-            if (focusedClient && 'navigate' in focusedClient && urlToOpen) {
-              return focusedClient.navigate(urlToOpen);
-            }
-            return focusedClient;
-          });
-        }
-      }
-      
-      // Jika tidak ada tab yang terbuka, baru buka jendela baru
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
-    })
-  );
 });
