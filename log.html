@@ -405,9 +405,9 @@
       setSyncingStatus();
       const { data, error } = await supabaseClient
         .from('logbook')
-        .select('room, patient_name, no_rm, tasks, therapies, diagnosa_medis, vital_signs')
+        .select('room, patient_name, no_rm, tasks, therapies, diagnosa_medis, vital_signs, doctor_name') // <-- Pastikan doctor_name ada di sini
         .eq('created_at', date)
-        .order('room', { ascending: true });
+        .order('room', { ascending: true }); 
 
       if (error) {
         console.error('Load failed:', error);
@@ -432,18 +432,31 @@
       const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, '');
       const blocks = document.querySelectorAll('.patient-block');
       
-      const payload = Array.from(blocks).map(block => ({
-        room: block.dataset.room, 
-        tasks: Array.from(block.querySelectorAll('.task-column .bullet-list li')).map(li => ({
-          text: li.querySelector('.bullet-text')?.textContent.trim() || '',
-          status: parseInt(li.dataset.status) || 0
-        })),
-        therapies: Array.from(block.querySelectorAll('.therapy-column .bullet-list li')).map(li => ({
-          text: li.querySelector('.bullet-text')?.textContent.trim() || '',
-          status: parseInt(li.dataset.status) || 0
-        })),
-        created_at
-      }));
+      const payload = Array.from(blocks).map(block => {
+        const room = block.dataset.room;
+        
+        // Ambil kembali teks dari elemen HTML di dalam block pasien
+        const patientNameText = block.querySelector('.patient-info-left div:nth-child(2)')?.textContent?.trim();
+        const doctorNameText = block.querySelector('.subText')?.textContent?.trim();
+        const subTexts = block.querySelectorAll('.subText');
+        const diagnosaText = subTexts.length > 1 ? subTexts[1]?.textContent?.trim() : null;
+
+        return {
+          room: room, 
+          patient_name: patientNameText && patientNameText !== '-' ? patientNameText : null,
+          doctor_name: doctorNameText && doctorNameText !== '-' ? doctorNameText : null,
+          diagnosa_medis: diagnosaText && diagnosaText !== '-' ? diagnosaText : null,
+          tasks: Array.from(block.querySelectorAll('.task-column .bullet-list li')).map(li => ({
+            text: li.querySelector('.bullet-text')?.textContent.trim() || '',
+            status: parseInt(li.dataset.status) || 0
+          })),
+          therapies: Array.from(block.querySelectorAll('.therapy-column .bullet-list li')).map(li => ({
+            text: li.querySelector('.bullet-text')?.textContent.trim() || '',
+            status: parseInt(li.dataset.status) || 0
+          })),
+          created_at
+        };
+      });
 
       if (payload.length === 0) return;
 

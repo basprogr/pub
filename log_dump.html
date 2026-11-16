@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="id">
+<head> 
+  <meta charset="UTF-8">
+  <title>Logbook</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
+  <style> 
+    :root { --bg: #efefe5; --primary: #2a5c84; --card-bg: #ffffff; --card-border: #e5e7eb; --text-main: #111827; --text-muted: #6b7280; --input-bg: #f3f4f6;} 
+    * { box-sizing: border-box; font-family: monospace; font-size: 0.8rem; } 
+    body { margin: 0; padding: 10px; background-color: var(--bg); color: var(--text-main); } 
+    div#syncStatus { position: fixed; top: 0; left: 0; width: 100%; height: 32px; line-height: 32px; background-color: #2a5c84; color: #ffffff; text-align: center; font-weight: bold;letter-spacing: 0.5px; z-index: 1000; border-bottom: 1px solid #ffedd5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }  
+    div.header { display: flex; justify-content: space-between; align-items: center; padding-top: 32px; max-width: 500px; margin: 0 auto 10px; }
+    details#roomList { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; padding: 6px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    details#roomList summary { cursor: pointer; color: var(--primary); font-weight: bold; outline: none;}
+    details#roomList table { margin-top: 8px; width: 100%; border-collapse: collapse;}
+    details#roomList td { padding: 3px 4px;  color: var(--text-muted);}
+    details#roomList input[type="checkbox"] { accent-color: var(--primary); cursor: pointer;}
+    details#roomList button {  background: var(--primary); color: #ffffff; border: none; padding: 6px; border-radius: 4px; font-weight: bold; cursor: pointer;  text-transform: uppercase; letter-spacing: 0.5px;}
+    details#roomList button:hover { opacity: 0.9;}
+    input[type='date']#filterDate {  background: var(--card-bg); color: var(--text-main); border: 1px solid var(--card-border); padding: 6px 10px; border-radius: 6px; outline: none;  box-shadow: 0 1px 2px rgba(0,0,0,0.03);}
+    div#patientContainer {  width: 100%;  max-width: 500px;  padding: 0;  box-sizing: border-box; }
+    div.patient-block {  padding: 8px;  background-color: var(--card-bg);  border: 1px solid var(--card-border);  margin-bottom: 12px;  border-radius: 8px;  box-shadow: 0 1px 3px rgba(0,0,0,0.04);}   
+    div.patient-header {  padding: 8px 10px;  background: #f3f4f6;  font-weight: bold;  color: var(--text-main); border-radius: 6px;  display: flex; flex-direction: column; gap: 5px;}
+    .patient-title-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .patient-info-left { display: flex; align-items: center; gap: 1rem; } 
+    .patient-info-left div { display: flex; align-items: center; color: var(--primary); }  
+    div.patient-content {  padding: 10px 0 5px;  display: grid;  grid-template-columns: calc(50% - 5px) calc(50% - 5px);  gap: 10px; }  
+    .subText { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; } 
+    .patient-vital-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;}
+    .vital-badge { background: #ffffff; border: 1px solid var(--card-border); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: var(--text-main); font-family: monospace;}
+    .task-input, .therapy-input {  margin-bottom: 8px;  display: flex; gap: 4px;}
+    input[type='text'].task, input.todo-input {  font-family: var(--font-mono); width: 100%;  padding: 5px 8px;  background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); border-radius: 4px;  outline: none;}
+    input[type='text'].task:focus, input.todo-input:focus { border-color: var(--primary); background: #ffffff;}
+    .task-input button, .therapy-input button { font-family: var(--font-mono); background: var(--primary); color: #ffffff; border: none; padding: 0 8px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+    .bullet-list {  list-style: none;  padding-left: 0;  margin: 0; }
+    .bullet-list li { display: flex; align-items: center; gap: 8px; padding: 5px 6px; cursor: pointer; border-radius: 4px; margin-bottom: 3px; }  
+    .bullet-list li.status-1 .bullet-text { text-decoration: line-through; color: #9ca3af; font-weight: normal; } 
+    .bullet-list li.status-2 .bullet-text { text-decoration: none; color: #FF0000; font-weight: bold; } 
+    .bullet-list li.status-3 .bullet-text { text-decoration: none; color: #008000; font-weight: bold; }  
+    .room-options-menu { position: relative; display: inline-block; }
+    .options-btn { background: none; border: none; cursor: pointer; font-size: 1rem; font-weight: bold; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; }
+    .options-btn:hover { background: #e5e7eb; color: var(--text-main); }
+    .options-dropdown { display: none; position: absolute; right: 0; top: 100%; background: #ffffff; border: 1px solid var(--card-border); border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100; min-width: 150px; }
+    .room-options-menu.active .options-dropdown { display: block; }
+    .options-dropdown button { display: block; width: 100%; text-align: left; background: none; border: none; padding: 8px 12px; font-family: monospace; font-size: 0.75rem; cursor: pointer; color: var(--text-main); }
+    .options-dropdown button:hover { background: var(--input-bg); }
+    .options-dropdown button.delete-option { color: #dc2626; border-top: 1px solid var(--card-border); }
+
+    .delete-btn { color: #9ca3af; cursor: pointer; } 
+    svg { height: .8rem; margin-right: 5px; }
+  </style>
+</head>
+<body>
+
+  <div id="syncStatus">Halo, selamat bekerja</div> 
+  <div class="header">
+    <div style="width: 48%;"> 
+      <details id="roomList">
+        <summary style="cursor: pointer;">Pilih Ruangan</summary>
+        <table>
+          <tr>
+            <td><label><input type="checkbox" name="room" value="301 Bed A"> 301a</label></td>
+            <td><label><input type="checkbox" name="room" value="301 Bed B"> 301b</label></td>
+          </tr>
+          <tr>
+            <td><label><input type="checkbox" name="room" value="302 Bed A"> 302a</label></td>
+            <td><label><input type="checkbox" name="room" value="302 Bed B"> 302b</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="303 Bed A"> 303a</label></td>
+            <td><label><input type="checkbox" name="room" value="303 Bed B"> 303b</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="304 Bed A"> 304a</label></td>
+            <td><label><input type="checkbox" name="room" value="304 Bed B"> 304b</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="305 Bed A"> 305a</label></td>
+            <td><label><input type="checkbox" name="room" value="305 Bed B"> 305b</label></td>
+            <td><label><input type="checkbox" name="room" value="305 Bed C"> 305c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="306 Bed A"> 306a</label></td>
+            <td><label><input type="checkbox" name="room" value="306 Bed B"> 306b</label></td>
+            <td><label><input type="checkbox" name="room" value="306 Bed C"> 306c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="307 Bed A"> 307a</label></td>
+            <td><label><input type="checkbox" name="room" value="307 Bed B"> 307b</label></td>
+            <td><label><input type="checkbox" name="room" value="307 Bed C"> 307c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="308 Bed A"> 308a</label></td>
+            <td><label><input type="checkbox" name="room" value="308 Bed B"> 308b</label></td>
+            <td><label><input type="checkbox" name="room" value="308 Bed C"> 308c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="309 Bed A"> 309a</label></td>
+            <td><label><input type="checkbox" name="room" value="309 Bed B"> 309b</label></td>
+            <td><label><input type="checkbox" name="room" value="309 Bed C"> 309c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="310 Bed A"> 310a</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed B"> 310b</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed C"> 310c</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed D"> 310d</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="311 Bed A"> 311a</label></td>
+            <td><label><input type="checkbox" name="room" value="311 Bed B"> 311b</label></td>
+            <td><label><input type="checkbox" name="room" value="311 Bed C"> 311c</label></td>
+          </tr> 
+        </table>  
+        <button onclick="addSelectedRooms()" style="width: 100%; margin-top: 5px;">Tambah</button> 
+      </details>
+    </div> 
+    
+    <input class="task" type="date" id="filterDate" onchange="loadLogbookByDate()">  
+  </div>
+
+  <div style="display: flex; justify-content: center; width: 100%;">
+    <div id="patientContainer"></div>
+  </div> 
+
+  <script> 
+      const p = new URLSearchParams(window.location.search); 
+      const su = p.get("su"); 
+      const sa = p.get("sa");   
+      const wa = p.get("wa");   
+      const supabaseURL = `https://${su}.supabase.co`; 
+      const supabaseClient = window.supabase.createClient(supabaseURL, sa);  
+   
+    function getSelectedDate() {
+      const dateInput = document.getElementById('filterDate');
+      const date = dateInput.value;
+      return date ? date.replace(/-/g, '') : null;
+    }
+ 
+    function setSyncingStatus() {
+      document.getElementById('syncStatus').textContent = 'Syncing...';
+    }
+
+    function updateSyncStatus() {
+      const now = new Date();
+      const hari = new Intl.DateTimeFormat('id-ID', { weekday: 'long' }).format(now);
+      const formatted = `${hari}, ${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID')}`;
+      document.getElementById('syncStatus').textContent = `Synced: ${formatted}`;
+    }
+
+    function addSelectedRooms() {
+      const checked = document.querySelectorAll('input[name="room"]:checked');
+      const container = document.getElementById('patientContainer');
+
+      checked.forEach(cb => {
+        if (!Array.from(container.children).some(div => div.dataset.room === cb.value)) {
+          container.appendChild(generatePatientBlock(cb.value));
+        }
+        cb.checked = false;
+        document.getElementById("roomList").open = false;
+      }); 
+      autoSave();
+    }
+
+    function generatePatientBlock(room, patientData = {}) {
+    const block = document.createElement('div');
+    block.className = 'patient-block';
+    block.dataset.room = room;
+
+    const patientName = patientData.patient_name || '-';
+    const no_rm = patientData.no_rm || '-';
+    const doctor_name = patientData.doctor_name || '-';
+
+    const rawDiagnosa = patientData.diagnosa_medis || '-'; 
+    let cleanText = rawDiagnosa.replace(/const diagnosa = patientData\.diagnosa_medis \|\| '-';/g, '');
+    let cleanDiagnose = cleanText 
+      .replace(/\b\d+\.\s*/g, '') 
+      .replace(/[\+\-\_]{2,}/g, '+') 
+      .replace(/\s*[\+\-\_]\s*/g, ', ') 
+      .replace(/\s+/g, ' ')
+      .trim(); 
+    cleanDiagnose = cleanDiagnose.replace(/^,\s*|\s*,\s*$/g, '');
+ 
+    let vitalHtml = '<span class="vital-badge">Vital: -</span>';
+    if (patientData.vital_signs) {
+      const vs = patientData.vital_signs;
+      const td = `${vs.sistole || '-'}/${vs.diastole || '-'}`;
+      const nadi = `${vs.nadi || '-'}`;
+      const suhu = `${vs.suhu || '-'}`;
+      const rr = `${vs.respirasi || '-'}`;
+      const spo2 = `${vs.spo2 || '-'}`;
+
+      const badges = [
+        `<span class="vital-badge">${td}</span>`,
+        `<span class="vital-badge">${nadi}</span>`,
+        `<span class="vital-badge">${suhu}</span>`,
+        `<span class="vital-badge">${rr}</span>`,
+        `<span class="vital-badge">${spo2}</span>`
+      ];
+
+      if (vs.status_oks && vs.status_oks != 0 && vs.status_oks !== '0') {
+        badges.push(`<span class="vital-badge">${vs.status_oks} lpm</span>`);
+      }
+
+      vitalHtml = badges.join('\n');
+    }
+
+    block.innerHTML = `  
+      <div class="patient-header">
+        <div class="patient-title-row">
+          <div class="patient-info-left">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M448 96L439.4 96C428.4 76.9 407.7 64 384 64L256 64C232.3 64 211.6 76.9 200.6 96L192 96C156.7 96 128 124.7 128 160L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 160C512 124.7 483.3 96 448 96zM264 176C250.7 176 240 165.3 240 152C240 138.7 250.7 128 264 128L376 128C389.3 128 400 138.7 400 152C400 165.3 389.3 176 376 176L264 176z"/></svg>
+              ${room}
+            </div> 
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M320 312C386.3 312 440 258.3 440 192C440 125.7 386.3 72 320 72C253.7 72 200 125.7 200 192C200 258.3 253.7 312 320 312zM290.3 368C191.8 368 112 447.8 112 546.3C112 562.7 125.3 576 141.7 576L498.3 576C514.7 576 528 562.7 528 546.3C528 447.8 448.2 368 349.7 368L290.3 368z"/></svg>
+              ${patientName}
+            </div> 
+          </div>
+          <div class="room-options-menu">
+            <button class="options-btn" title="Opsi">&#8942;</button>
+            <div class="options-dropdown">
+              <button class="wa-eresep-option">Minta Resep via WA</button>
+              <button class="delete-option">Hapus Ruangan</button>
+            </div>
+          </div>
+        </div>
+        <div class="subText">${doctor_name}</div>
+        <div class="subText">${cleanDiagnose}</div>
+        <div class="patient-vital-container">
+          ${vitalHtml}
+        </div>
+      </div>
+      <div class="patient-content">
+        <div class="task-column">
+          <div class="task-input"> 
+            <input type="text" class="todo-input task" placeholder="Task"><button>+</button> 
+          </div>
+          <ul class="bullet-list"></ul>
+        </div>
+        <div class="therapy-column">
+          <div class="therapy-input">
+            <input type="text" class="todo-input task" placeholder="Therapy"><button>+</button> 
+          </div>
+          <ul class="bullet-list"></ul>
+        </div>
+      </div>
+    `;
+
+    // Event listener untuk tombol titik tiga (toggle menu)
+    const optionsMenu = block.querySelector('.room-options-menu');
+    const optionsBtn = block.querySelector('.options-btn');
+    optionsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.room-options-menu').forEach(m => {
+        if (m !== optionsMenu) m.classList.remove('active');
+      });
+      optionsMenu.classList.toggle('active');
+    });
+
+    window.addEventListener('click', () => {
+      optionsMenu.classList.remove('active');
+    });
+
+    // Fitur Minta Resep via WA (Terapi warna merah / status-2)
+    block.querySelector('.wa-eresep-option').addEventListener('click', (e) => {
+      e.preventDefault();
+      const redTherapies = Array.from(block.querySelectorAll('.therapy-column .bullet-list li.status-2'))
+        .map(li => li.querySelector('.bullet-text')?.textContent.trim())
+        .filter(Boolean);
+
+      if (redTherapies.length === 0) {
+        alert('Tidak ada terapi berwarna merah (status-2) untuk e-resep!');
+        return;
+      }
+
+      const hour = new Date().getHours();
+      let greeting = 'selamat malam';
+      if (hour >= 4 && hour < 11) {
+        greeting = 'selamat pagi';
+      } else if (hour >= 11 && hour < 15) {
+        greeting = 'selamat siang';
+      } else if (hour >= 15 && hour < 18) {
+        greeting = 'selamat sore';
+      } 
+      if (!wa) {
+        alert('Nomor WhatsApp (parameter wa) tidak ditemukan di URL!');
+        return;
+      } 
+      const eresepList = redTherapies.map((item) => `- ${item}`).join('\n');
+      const message = `${greeting} dokter, minta tolong eresep nggih\n\n*${patientName} / ${no_rm}*\n\n${eresepList}`; 
+      const encodedMessage = encodeURIComponent(message);
+      window.open(`https://wa.me/${wa}?text=${encodedMessage}`, '_blank');
+    });
+
+    // Fitur Hapus Ruangan
+    block.querySelector('.delete-option').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const isConfirmed = confirm(`Apakah Anda yakin ingin menghapus ruangan ${block.dataset.room}?`);
+      if (!isConfirmed) return;  
+      const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, ''); 
+      setSyncingStatus();
+      const { error } = await supabaseClient
+        .from('logbook')
+        .delete()
+        .eq('room', block.dataset.room)
+        .eq('created_at', created_at);
+
+      if (error) {
+        console.error('Delete failed:', error);
+        document.getElementById('syncStatus').textContent = '❌ Delete failed';
+      } else {
+        block.remove();
+        updateSyncStatus();
+      }
+    });
+
+    block.querySelectorAll('.task-input button, .therapy-input button').forEach(btn => {
+      btn.addEventListener('click', () => addBullet(btn));
+    });
+ 
+    activateEnterListeners(block);
+    return block;
+}
+
+    function createListItem(ulElement, text, statusValue = 0) {
+      const li = document.createElement('li');
+      li.className = 'clickable';
+      li.dataset.status = statusValue;
+      if (statusValue > 0) {
+        li.classList.add(`status-${statusValue}`);
+      }
+
+      li.innerHTML = `
+        <span class="delete-btn">&#9746;</span>
+        <span class="bullet-text">${text}</span> 
+      `;
+
+      li.querySelector('.bullet-text').addEventListener('click', () => {
+        let currentStatus = parseInt(li.dataset.status) || 0;
+        
+        // Hapus kelas status lama jika ada
+        if (currentStatus > 0) li.classList.remove(`status-${currentStatus}`);
+
+        // Ubah siklus menjadi 4 tahap: 0 -> 1 -> 2 -> 3 -> kembali ke 0
+        currentStatus = (currentStatus + 1) % 4;
+        li.dataset.status = currentStatus;
+
+        // Tambahkan kelas status baru jika > 0
+        if (currentStatus > 0) li.classList.add(`status-${currentStatus}`);
+        
+        autoSave();
+      });
+
+      li.querySelector('.delete-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        li.remove();
+        autoSave();
+      });
+
+      ulElement.appendChild(li);
+    }
+  
+    function addBullet(button) {
+      const input = button.previousElementSibling;
+      const column = button.closest('.task-column, .therapy-column');
+      const ul = column?.querySelector('.bullet-list');
+      let text = input.value.trim(); 
+      if (!text) return;  
+      createListItem(ul, text, 0); 
+      input.value = '';
+      input.focus();
+      autoSave();
+    }
+
+    function activateEnterListeners(scope = document) {
+      scope.querySelectorAll('.todo-input').forEach(input => {
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            input.nextElementSibling?.click();
+          }
+        });
+      });
+    }
+
+    function renderList(listElement, items) {
+      if (!items || !Array.isArray(items)) return;
+      items.forEach(t => {
+        let initialStatus = 0;
+        if (t.status !== undefined) {
+          initialStatus = parseInt(t.status);
+        } else if (t.done === true) {
+          initialStatus = 1;
+        }
+        createListItem(listElement, t.text, initialStatus);
+      });
+    }
+ 
+    async function loadLogbookByDate() {
+      const date = getSelectedDate();
+      if (!date) return;
+
+      setSyncingStatus();
+      const { data, error } = await supabaseClient
+        .from('logbook')
+        .select('room, patient_name, no_rm, tasks, therapies, diagnosa_medis, vital_signs')
+        .eq('created_at', date)
+        .order('room', { ascending: true });
+
+      if (error) {
+        console.error('Load failed:', error);
+        document.getElementById('syncStatus').textContent = '❌ Load failed';
+        return;
+      }
+
+      const container = document.getElementById('patientContainer');
+      container.innerHTML = '';
+
+      data.forEach(entry => {
+        const block = generatePatientBlock(entry.room, entry);
+        renderList(block.querySelector('.task-column .bullet-list'), entry.tasks);
+        renderList(block.querySelector('.therapy-column .bullet-list'), entry.therapies);
+
+        container.appendChild(block);
+      });
+      updateSyncStatus();
+    }
+ 
+    async function autoSave() {
+      const created_at = getSelectedDate() || new Date().toISOString().slice(0,10).replace(/-/g, '');
+      const blocks = document.querySelectorAll('.patient-block');
+      
+      const payload = Array.from(blocks).map(block => ({
+        room: block.dataset.room, 
+        tasks: Array.from(block.querySelectorAll('.task-column .bullet-list li')).map(li => ({
+          text: li.querySelector('.bullet-text')?.textContent.trim() || '',
+          status: parseInt(li.dataset.status) || 0
+        })),
+        therapies: Array.from(block.querySelectorAll('.therapy-column .bullet-list li')).map(li => ({
+          text: li.querySelector('.bullet-text')?.textContent.trim() || '',
+          status: parseInt(li.dataset.status) || 0
+        })),
+        created_at
+      }));
+
+      if (payload.length === 0) return;
+
+      setSyncingStatus();
+
+      const { error } = await supabaseClient
+        .from('logbook')
+        .upsert(payload, { onConflict: 'room,created_at' });
+
+      if (error) {
+        console.error('Auto-save failed:', error);
+        document.getElementById('syncStatus').textContent = `❌ Sync failed: ${error.message}`;
+      } else {
+        updateSyncStatus();
+      }
+    }
+ 
+    window.addEventListener('DOMContentLoaded', () => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      
+      const dateInput = document.getElementById('filterDate');
+      dateInput.value = `${year}-${month}-${day}`;
+      loadLogbookByDate();
+    });
+  </script>
+</body>
+</html>
