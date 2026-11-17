@@ -27,8 +27,8 @@
     .patient-info-left div { display: flex; align-items: center; color: var(--primary); }  
     div.patient-content {  padding: 10px 0 5px;  display: grid;  grid-template-columns: calc(50% - 5px) calc(50% - 5px);  gap: 10px; }  
     .subText { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; } 
-    .patient-vital-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;}
-    .vital-badge { background: #ffffff; border: 1px solid var(--card-border); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: var(--text-main); font-family: monospace;}
+    .badge-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;}
+    .badge { background: #ffffff; border: 1px solid var(--card-border); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: var(--text-main); font-family: monospace;}
     .task-input, .therapy-input {  margin-bottom: 8px;  display: flex; gap: 4px;}
     input[type='text'].task, input.todo-input {  font-family: var(--font-mono); width: 100%;  padding: 5px 8px;  background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); border-radius: 4px;  outline: none;}
     input[type='text'].task:focus, input.todo-input:focus { border-color: var(--primary); background: #ffffff;}
@@ -181,7 +181,7 @@
       .trim(); 
     cleanDiagnose = cleanDiagnose.replace(/^,\s*|\s*,\s*$/g, '');
  
-    let vitalHtml = '<span class="vital-badge">Vital: -</span>';
+    let vitalHtml = '<span class="badge">Vital: -</span>';
     if (patientData.vital_signs) {
       const vs = patientData.vital_signs;
       const td = `${vs.sistole || '-'}/${vs.diastole || '-'}`;
@@ -191,15 +191,15 @@
       const spo2 = `${vs.spo2 || '-'}`;
 
       const badges = [
-        `<span class="vital-badge">${td}</span>`,
-        `<span class="vital-badge">${nadi}</span>`,
-        `<span class="vital-badge">${suhu}</span>`,
-        `<span class="vital-badge">${rr}</span>`,
-        `<span class="vital-badge">${spo2}</span>`
+        `<span class="badge">${td}</span>`,
+        `<span class="badge">${nadi}</span>`,
+        `<span class="badge">${suhu}</span>`,
+        `<span class="badge">${rr}</span>`,
+        `<span class="badge">${spo2}</span>`
       ];
 
       if (vs.status_oks && vs.status_oks != 0 && vs.status_oks !== '0') {
-        badges.push(`<span class="vital-badge">${vs.status_oks} lpm</span>`);
+        badges.push(`<span class="badge">${vs.status_oks} lpm</span>`);
       }
 
       vitalHtml = badges.join('\n');
@@ -226,9 +226,11 @@
             </div>
           </div>
         </div>
-        <div class="subText">${doctor_name}</div>
+        <div class="badge-container">
+          <span class="badge">${doctor_name}</span>
+        </div>
         <div class="subText">${cleanDiagnose}</div>
-        <div class="patient-vital-container">
+        <div class="badge-container">
           ${vitalHtml}
         </div>
       </div>
