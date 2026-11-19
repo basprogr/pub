@@ -1,0 +1,523 @@
+<body>
+
+  <div id="syncStatus">Halo, selamat bekerja</div>
+  <div class="header">
+    <div style="width: 48%;">
+      <details id="roomList">
+        <summary style="cursor: pointer;">Pilih Ruangan</summary>
+        <table>
+          <tr>
+            <td><label><input type="checkbox" name="room" value="301 Bed A"> 301a</label></td>
+            <td><label><input type="checkbox" name="room" value="301 Bed B"> 301b</label></td>
+          </tr>
+          <tr>
+            <td><label><input type="checkbox" name="room" value="302 Bed A"> 302a</label></td>
+            <td><label><input type="checkbox" name="room" value="302 Bed B"> 302b</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="303 Bed A"> 303a</label></td>
+            <td><label><input type="checkbox" name="room" value="303 Bed B"> 303b</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="304 Bed A"> 304a</label></td>
+            <td><label><input type="checkbox" name="room" value="304 Bed B"> 304b</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="305 Bed A"> 305a</label></td>
+            <td><label><input type="checkbox" name="room" value="305 Bed B"> 305b</label></td>
+            <td><label><input type="checkbox" name="room" value="305 Bed C"> 305c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="306 Bed A"> 306a</label></td>
+            <td><label><input type="checkbox" name="room" value="306 Bed B"> 306b</label></td>
+            <td><label><input type="checkbox" name="room" value="306 Bed C"> 306c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="307 Bed A"> 307a</label></td>
+            <td><label><input type="checkbox" name="room" value="307 Bed B"> 307b</label></td>
+            <td><label><input type="checkbox" name="room" value="307 Bed C"> 307c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="308 Bed A"> 308a</label></td>
+            <td><label><input type="checkbox" name="room" value="308 Bed B"> 308b</label></td>
+            <td><label><input type="checkbox" name="room" value="308 Bed C"> 308c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="309 Bed A"> 309a</label></td>
+            <td><label><input type="checkbox" name="room" value="309 Bed B"> 309b</label></td>
+            <td><label><input type="checkbox" name="room" value="309 Bed C"> 309c</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="310 Bed A"> 310a</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed B"> 310b</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed C"> 310c</label></td>
+            <td><label><input type="checkbox" name="room" value="310 Bed D"> 310d</label></td>
+          </tr> 
+          <tr>
+            <td><label><input type="checkbox" name="room" value="311 Bed A"> 311a</label></td>
+            <td><label><input type="checkbox" name="room" value="311 Bed B"> 311b</label></td>
+            <td><label><input type="checkbox" name="room" value="311 Bed C"> 311c</label></td>
+          </tr> 
+        </table>
+        <button type="button" onclick="addSelectedRooms()" style="width: 100%; margin-top: 5px;">Tambah</button>
+      </details>
+    </div>
+
+    <input class="task" type="date" id="filterDate" onchange="loadLogbookByDate()">
+  </div>
+
+  <div style="display: flex; justify-content: center; width: 100%;">
+    <div id="patientContainer"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const su = params.get("su");
+    const sa = params.get("sa");
+    const wa = (params.get("wa") || "").replace(/\D/g, "");
+
+    const supabaseClient = (su && sa && window.supabase?.createClient)
+      ? window.supabase.createClient(`https://${su}.supabase.co`, sa)
+      : null;
+
+    if (!supabaseClient) {
+      console.warn("Supabase client belum terinisialisasi: periksa parameter URL 'su' dan 'sa'.");
+    }
+
+    // Tutup semua menu opsi ruangan saat klik di luar menu (dipasang sekali saja)
+    window.addEventListener("click", () => {
+      document.querySelectorAll(".room-options-menu.active").forEach(menu => {
+        menu.classList.remove("active");
+      });
+    });
+
+    function getLocalYYYYMMDD(dateObj = new Date()) {
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      return `${year}${month}${day}`;
+    }
+
+    function getSelectedDate() {
+      const dateInput = document.getElementById("filterDate");
+      const date = dateInput?.value;
+      return date ? date.replace(/-/g, "") : null;
+    }
+
+    function setSyncingStatus() {
+      const el = document.getElementById("syncStatus");
+      if (el) el.textContent = "Syncing...";
+    }
+
+    function updateSyncStatus() {
+      const el = document.getElementById("syncStatus");
+      if (!el) return;
+      const now = new Date();
+      const hari = new Intl.DateTimeFormat("id-ID", { weekday: "long" }).format(now);
+      const formatted = `${hari}, ${now.toLocaleDateString("id-ID")} ${now.toLocaleTimeString("id-ID")}`;
+      el.textContent = `Synced: ${formatted}`;
+    }
+
+    function cleanDiagnosisText(rawDiagnosa) {
+      if (!rawDiagnosa) return "-";
+      let cleanText = String(rawDiagnosa)
+        .replace(/const diagnosa = patientData\.diagnosa_medis \|\| '-';/g, "");
+
+      let cleanDiagnose = cleanText
+        .replace(/\b\d+\.\s*/g, "")
+        .replace(/[\+\-\_]{2,}/g, "+")
+        .replace(/\s*[\+\-\_]\s*/g, ", ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      cleanDiagnose = cleanDiagnose.replace(/^,\s*|\s*,\s*$/g, "");
+      return cleanDiagnose || "-";
+    }
+
+    function buildVitalHtml(vitalSigns) {
+      if (!vitalSigns || typeof vitalSigns !== "object") {
+        return '<span class="badge">Vital: -</span>';
+      }
+
+      const td = `${vitalSigns.sistole || "-"}/${vitalSigns.diastole || "-"}`;
+      const nadi = `${vitalSigns.nadi || "-"}`;
+      const suhu = `${vitalSigns.suhu || "-"}`;
+      const rr = `${vitalSigns.respirasi || "-"}`;
+      const spo2 = `${vitalSigns.spo2 || "-"}`;
+
+      const badges = [
+        `<span class="badge">${td}</span>`,
+        `<span class="badge">${nadi}</span>`,
+        `<span class="badge">${suhu}</span>`,
+        `<span class="badge">${rr}</span>`,
+        `<span class="badge">${spo2}</span>`
+      ];
+
+      if (vitalSigns.status_oks && vitalSigns.status_oks != 0 && vitalSigns.status_oks !== "0") {
+        badges.push(`<span class="badge">${vitalSigns.status_oks} lpm</span>`);
+      }
+
+      return badges.join("\n");
+    }
+
+    function addSelectedRooms() {
+      const checked = document.querySelectorAll('input[name="room"]:checked');
+      const container = document.getElementById("patientContainer");
+      let added = false;
+
+      checked.forEach(cb => {
+        const alreadyExists = Array.from(container.children).some(
+          div => div.dataset.room === cb.value
+        );
+        if (!alreadyExists) {
+          container.appendChild(generatePatientBlock(cb.value));
+          added = true;
+        }
+        cb.checked = false;
+      });
+
+      const roomList = document.getElementById("roomList");
+      if (roomList) roomList.open = false;
+
+      if (added) {
+        autoSave();
+      }
+    }
+
+    function generatePatientBlock(room, patientData = {}) {
+      const block = document.createElement("div");
+      block.className = "patient-block";
+      block.dataset.room = room;
+
+      const patientName = patientData.patient_name || "-";
+      const no_rm = patientData.no_rm || "-";
+      const doctor_name = patientData.doctor_name || "-";
+      const cleanDiagnose = cleanDiagnosisText(patientData.diagnosa_medis);
+      const vitalHtml = buildVitalHtml(patientData.vital_signs);
+
+      // Simpan metadata pasien agar tidak hilang/tertukar saat autoSave() berjalan
+      block._patientData = {
+        no_rm,
+        doctor_name,
+        diagnosa_medis: cleanDiagnose,
+        vital_signs: patientData.vital_signs || null
+      };
+
+      block.innerHTML = `
+        <div class="patient-header">
+          <div class="patient-title-row">
+            <div class="patient-info-left">
+              <div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M448 96L439.4 96C428.4 76.9 407.7 64 384 64L256 64C232.3 64 211.6 76.9 200.6 96L192 96C156.7 96 128 124.7 128 160L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 160C512 124.7 483.3 96 448 96zM264 176C250.7 176 240 165.3 240 152C240 138.7 250.7 128 264 128L376 128C389.3 128 400 138.7 400 152C400 165.3 389.3 176 376 176L264 176z"/></svg>
+                <span class="room-label"></span>
+              </div>
+              <div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M320 312C386.3 312 440 258.3 440 192C440 125.7 386.3 72 320 72C253.7 72 200 125.7 200 192C200 258.3 253.7 312 320 312zM290.3 368C191.8 368 112 447.8 112 546.3C112 562.7 125.3 576 141.7 576L498.3 576C514.7 576 528 562.7 528 546.3C528 447.8 448.2 368 349.7 368L290.3 368z"/></svg>
+                <span class="patient-name-label"></span>
+              </div>
+            </div>
+            <div class="room-options-menu">
+              <button type="button" class="options-btn" title="Opsi">&#8942;</button>
+              <div class="options-dropdown">
+                <button type="button" class="wa-eresep-option">Minta Resep via WA</button>
+                <button type="button" class="delete-option">Hapus Ruangan</button>
+              </div>
+            </div>
+          </div>
+          <div class="badge-container">
+            <span class="badge doctor-badge"></span>
+          </div>
+          <div class="subText diagnosis-text"></div>
+          <div class="badge-container">
+            ${vitalHtml}
+          </div>
+        </div>
+        <div class="patient-content">
+          <div class="task-column">
+            <div class="task-input">
+              <input type="text" class="todo-input task" placeholder="Task"><button type="button">+</button>
+            </div>
+            <ul class="bullet-list"></ul>
+          </div>
+          <div class="therapy-column">
+            <div class="therapy-input">
+              <input type="text" class="todo-input task" placeholder="Therapy"><button type="button">+</button>
+            </div>
+            <ul class="bullet-list"></ul>
+          </div>
+        </div>
+      `;
+
+      // Isi teks dinamis dengan textContent agar aman dari karakter '<' / '>'
+      block.querySelector(".room-label").textContent = room;
+      block.querySelector(".patient-name-label").textContent = patientName;
+      block.querySelector(".doctor-badge").textContent = doctor_name;
+      block.querySelector(".diagnosis-text").textContent = cleanDiagnose;
+
+      // Toggle menu titik tiga
+      const optionsMenu = block.querySelector(".room-options-menu");
+      const optionsBtn = block.querySelector(".options-btn");
+      optionsBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        document.querySelectorAll(".room-options-menu").forEach(m => {
+          if (m !== optionsMenu) m.classList.remove("active");
+        });
+        optionsMenu.classList.toggle("active");
+      });
+
+      // Minta Resep via WA (Terapi status-2 / merah)
+      block.querySelector(".wa-eresep-option").addEventListener("click", e => {
+        e.preventDefault();
+        const redTherapies = Array.from(block.querySelectorAll(".therapy-column .bullet-list li.status-2"))
+          .map(li => li.querySelector(".bullet-text")?.textContent.trim())
+          .filter(Boolean);
+
+        if (redTherapies.length === 0) {
+          alert("Tidak ada terapi berwarna merah (status-2) untuk e-resep!");
+          return;
+        }
+
+        if (!wa) {
+          alert("Nomor WhatsApp (parameter wa) tidak ditemukan atau tidak valid di URL!");
+          return;
+        }
+
+        const hour = new Date().getHours();
+        let greeting = "selamat malam";
+        if (hour >= 4 && hour < 11) {
+          greeting = "selamat pagi";
+        } else if (hour >= 11 && hour < 15) {
+          greeting = "selamat siang";
+        } else if (hour >= 15 && hour < 18) {
+          greeting = "selamat sore";
+        }
+
+        const currentPatientName = block.querySelector(".patient-name-label")?.textContent.trim() || "-";
+        const currentNoRm = block._patientData?.no_rm || "-";
+        const eresepList = redTherapies.map(item => `- ${item}`).join("\n");
+        const message = `${greeting} dokter, minta tolong eresep nggih\n\n*${currentPatientName} / ${currentNoRm}*\n\n${eresepList}`;
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://wa.me/${wa}?text=${encodedMessage}`, "_blank");
+      });
+
+      // Hapus Ruangan
+      block.querySelector(".delete-option").addEventListener("click", async e => {
+        e.preventDefault();
+        const isConfirmed = confirm(`Apakah Anda yakin ingin menghapus ruangan ${block.dataset.room}?`);
+        if (!isConfirmed) return;
+
+        const created_at = getSelectedDate() || getLocalYYYYMMDD();
+
+        if (!supabaseClient) {
+          block.remove();
+          return;
+        }
+
+        setSyncingStatus();
+        const { error } = await supabaseClient
+          .from("logbook")
+          .delete()
+          .eq("room", block.dataset.room)
+          .eq("created_at", created_at);
+
+        if (error) {
+          console.error("Delete failed:", error);
+          document.getElementById("syncStatus").textContent = "❌ Delete failed";
+        } else {
+          block.remove();
+          updateSyncStatus();
+        }
+      });
+
+      block.querySelectorAll(".task-input button, .therapy-input button").forEach(btn => {
+        btn.addEventListener("click", () => addBullet(btn));
+      });
+
+      activateEnterListeners(block);
+      return block;
+    }
+
+    function createListItem(ulElement, text, statusValue = 0) {
+      const li = document.createElement("li");
+      li.className = "clickable";
+      const safeStatus = Number.isInteger(Number(statusValue)) ? parseInt(statusValue, 10) : 0;
+      li.dataset.status = safeStatus;
+
+      if (safeStatus > 0) {
+        li.classList.add(`status-${safeStatus}`);
+      }
+
+      const delBtn = document.createElement("span");
+      delBtn.className = "delete-btn";
+      delBtn.innerHTML = "&#9746;";
+
+      const textSpan = document.createElement("span");
+      textSpan.className = "bullet-text";
+      textSpan.textContent = text;
+
+      li.append(delBtn, textSpan);
+
+      textSpan.addEventListener("click", () => {
+        let currentStatus = parseInt(li.dataset.status, 10) || 0;
+        if (currentStatus > 0) {
+          li.classList.remove(`status-${currentStatus}`);
+        }
+
+        currentStatus = (currentStatus + 1) % 4;
+        li.dataset.status = currentStatus;
+
+        if (currentStatus > 0) {
+          li.classList.add(`status-${currentStatus}`);
+        }
+
+        autoSave();
+      });
+
+      delBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        li.remove();
+        autoSave();
+      });
+
+      ulElement.appendChild(li);
+    }
+
+    function addBullet(button) {
+      const input = button.previousElementSibling;
+      const column = button.closest(".task-column, .therapy-column");
+      const ul = column?.querySelector(".bullet-list");
+      const text = input?.value.trim();
+
+      if (!text || !ul) return;
+
+      createListItem(ul, text, 0);
+      input.value = "";
+      input.focus();
+      autoSave();
+    }
+
+    function activateEnterListeners(scope = document) {
+      scope.querySelectorAll(".todo-input").forEach(input => {
+        input.addEventListener("keydown", e => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            input.nextElementSibling?.click();
+          }
+        });
+      });
+    }
+
+    function renderList(listElement, items) {
+      if (!listElement || !Array.isArray(items)) return;
+      listElement.innerHTML = "";
+
+      items.forEach(item => {
+        if (!item) return;
+        let initialStatus = 0;
+        if (item.status !== undefined && item.status !== null) {
+          initialStatus = parseInt(item.status, 10) || 0;
+        } else if (item.done === true) {
+          initialStatus = 1;
+        }
+        createListItem(listElement, item.text || "", initialStatus);
+      });
+    }
+
+    async function loadLogbookByDate() {
+      const date = getSelectedDate();
+      if (!date) return;
+
+      if (!supabaseClient) {
+        document.getElementById("syncStatus").textContent = "⚠️ Konfigurasi Supabase belum lengkap";
+        return;
+      }
+
+      setSyncingStatus();
+      const { data, error } = await supabaseClient
+        .from("logbook")
+        .select("room, patient_name, no_rm, tasks, therapies, diagnosa_medis, vital_signs, doctor_name")
+        .eq("created_at", date)
+        .order("room", { ascending: true });
+
+      if (error) {
+        console.error("Load failed:", error);
+        document.getElementById("syncStatus").textContent = "❌ Load failed";
+        return;
+      }
+
+      const container = document.getElementById("patientContainer");
+      container.innerHTML = "";
+
+      (data || []).forEach(entry => {
+        const block = generatePatientBlock(entry.room, entry);
+        renderList(block.querySelector(".task-column .bullet-list"), entry.tasks);
+        renderList(block.querySelector(".therapy-column .bullet-list"), entry.therapies);
+        container.appendChild(block);
+      });
+
+      updateSyncStatus();
+    }
+
+    async function autoSave() {
+      const created_at = getSelectedDate() || getLocalYYYYMMDD();
+      const blocks = document.querySelectorAll(".patient-block");
+
+      const payload = Array.from(blocks).map(block => {
+        const room = block.dataset.room;
+        const meta = block._patientData || {};
+        const patientNameText = block.querySelector(".patient-name-label")?.textContent?.trim();
+
+        return {
+          room,
+          patient_name: patientNameText && patientNameText !== "-" ? patientNameText : null,
+          no_rm: meta.no_rm && meta.no_rm !== "-" ? meta.no_rm : null,
+          doctor_name: meta.doctor_name && meta.doctor_name !== "-" ? meta.doctor_name : null,
+          diagnosa_medis: meta.diagnosa_medis && meta.diagnosa_medis !== "-" ? meta.diagnosa_medis : null,
+          vital_signs: meta.vital_signs || null,
+          tasks: Array.from(block.querySelectorAll(".task-column .bullet-list li")).map(li => ({
+            text: li.querySelector(".bullet-text")?.textContent.trim() || "",
+            status: parseInt(li.dataset.status, 10) || 0
+          })),
+          therapies: Array.from(block.querySelectorAll(".therapy-column .bullet-list li")).map(li => ({
+            text: li.querySelector(".bullet-text")?.textContent.trim() || "",
+            status: parseInt(li.dataset.status, 10) || 0
+          })),
+          created_at
+        };
+      });
+
+      if (payload.length === 0) return;
+
+      if (!supabaseClient) {
+        document.getElementById("syncStatus").textContent = "⚠️ Tidak tersimpan (Supabase belum siap)";
+        return;
+      }
+
+      setSyncingStatus();
+
+      const { error } = await supabaseClient
+        .from("logbook")
+        .upsert(payload, { onConflict: "room,created_at" });
+
+      if (error) {
+        console.error("Auto-save failed:", error);
+        document.getElementById("syncStatus").textContent = `❌ Sync failed: ${error.message}`;
+      } else {
+        updateSyncStatus();
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+
+      const dateInput = document.getElementById("filterDate");
+      if (dateInput) {
+        dateInput.value = `${year}-${month}-${day}`;
+      }
+      loadLogbookByDate();
+    });
+  </script>
+</body>
